@@ -12,3 +12,7 @@
   Media URLs carry `?v=<hash>` from `tools/asset-versions.mjs` (runs in `npm run build`).
 - UI text and voice are Russian. Test on a phone viewport: `npm run test:e2e` (dev server on :8080).
 - Correct answers carry `data-answer="1"` (used by the e2e tests).
+- The fox is alive: `<Fox>` renders `LivePic` (`src/components/live-pic.tsx`) — the picture on a
+  WebGL mesh bent by bones from `src/content/fox-rig.ts` (tail, head, ears, arms, eyelids;
+  `src/game/live.ts`). A new fox pose needs a rig entry (points read off a 5 % grid). Without
+  WebGL or with reduced motion it is the plain picture. Dev: `window.__live` (`debugBlink`).

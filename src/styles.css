@@ -54,6 +54,25 @@ img {
   display: block;
   -webkit-user-drag: none;
 }
+/* a live (mesh-animated) picture: the <img> keeps the layout, the canvas draws over it.
+   Early in the file so that the classes of each place (position, size…) win. */
+.live-pic {
+  position: relative;
+  display: block;
+}
+.live-pic-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+}
+.live-pic-gl {
+  position: absolute;
+  pointer-events: none;
+}
+.live-pic.is-live .live-pic-img {
+  visibility: hidden;
+}
 
 .app {
   position: relative;

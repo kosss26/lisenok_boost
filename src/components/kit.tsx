@@ -5,6 +5,8 @@ import { art } from "../game/assets";
 import { sfx } from "../game/audio";
 import { openParents } from "./parents-state";
 import { IconBack, IconGear } from "./icons";
+import { LivePic } from "./live-pic";
+import { FOX_RIGS } from "../content/fox-rig";
 
 export function Pic({
   name,
@@ -21,8 +23,16 @@ export function Pic({
 }
 
 export type FoxPose = "wave" | "walk" | "jump" | "think" | "cheer" | "read" | "point";
+/** The fox: alive — tail, ears, breath, blinks (src/game/live.ts), or a plain picture without WebGL. */
 export function Fox({ pose, className = "" }: { pose: FoxPose; className?: string }) {
-  return <Pic name={`fox-${pose}`} className={`fox ${className}`} alt="Лисёнок" />;
+  return (
+    <LivePic
+      name={`fox-${pose}`}
+      rig={FOX_RIGS[pose]}
+      className={`fox ${className}`}
+      alt="Лисёнок"
+    />
+  );
 }
 
 /** Grown-up button: does something only after holding it for 2.5 seconds. */
