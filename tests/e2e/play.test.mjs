@@ -32,6 +32,8 @@ for (const level of [1, 2, 3]) {
     assert.equal(p.settings.level, level, "level stays when auto is off");
     await page.click(".back-btn");
     await page.click(".album-btn");
+    // screens change with a view transition: the album is there a moment after the tap
+    await page.waitForSelector(".album-slot.is-have");
     assert.equal(await page.locator(".album-slot.is-have").count(), STOPS.length);
     assert.deepEqual(errors, []);
   });

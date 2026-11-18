@@ -22,6 +22,8 @@ const album = createRoute({ getParentRoute: () => root, path: "/album", componen
 export const router = createRouter({
   routeTree: root.addChildren([title, map, forest, stopRoute, glade, album]),
   defaultPreload: false,
+  // a soft cross-fade between screens (styles: ::view-transition-* in styles.css)
+  defaultViewTransition: true,
 });
 
 declare module "@tanstack/react-router" {

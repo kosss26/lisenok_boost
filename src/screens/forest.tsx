@@ -16,14 +16,20 @@ const ENTRANCE: Pt = { x: 50, y: 99.5 };
 const reduced = () =>
   typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** The fox waits on the path most of the way from the last solved stop to the next one. */
-function foxSpot(next: number): Pt {
-  const to = onPath(FOREST[Math.min(next, FOREST.length - 1)]);
-  const from = next > 0 ? onPath(FOREST[next - 1]) : ENTRANCE;
-  return { x: from.x + (to.x - from.x) * 0.62, y: from.y + (to.y - from.y) * 0.62 + 1.5 };
-}
 /** Farther stops (higher on the picture) are drawn smaller, like in perspective. */
 const depth = (y: number) => Math.min(1, 0.68 + 0.32 * (y / 80));
+/** depth for a point on the whole (two pictures high) forest: each picture has its own horizon */
+const depthAt = (p: Pt) => depth(p.y >= 50 ? (p.y - 50) * 2 : p.y * 2);
+/**
+ * The fox waits beside the next stop, on the grass away from the path (the clearings zigzag, so
+ * the outer side is free) — not between two stops, where it used to cover the neighbours.
+ */
+function foxSpot(next: number): Pt {
+  const stop = FOREST[Math.min(next, FOREST.length - 1)];
+  const to = onPath(stop);
+  const side = to.x >= 50 ? 1 : -1;
+  return { x: to.x + side * 15 * depth(stop.y), y: to.y + 0.4 };
+}
 /** A full-box layer moved by translate(%) — % of its own size = % of the picture (GPU-only). */
 const at = (p: Pt): CSSProperties => ({ transform: `translate(${p.x}%, ${p.y}%)` });
 
@@ -163,6 +169,7 @@ export function Forest() {
             <div className={`fox-track ${arrived ? "is-arrived" : "is-walking"}`} style={at(fox)}>
               <span
                 className={`forest-fox-wrap ${(arrived ? flipped : goingLeft) ? "is-flipped" : ""}`}
+                style={{ "--s": depthAt(fox) } as CSSProperties}
               >
                 <Fox pose={arrived ? "wave" : "walk"} className="forest-fox" />
               </span>
