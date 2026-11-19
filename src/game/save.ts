@@ -1,9 +1,11 @@
 /** Versioned, bounded save format shared by local storage and portable backups. */
 import { NAMES } from "../content/names.ts";
-import { SKILL_NAMES } from "../content/forest.ts";
+import { FOREST, SKILL_NAMES } from "../content/forest.ts";
 import type { Progress, SkillStat, WordStat } from "./progress.ts";
 
-export const SAVE_VERSION = 2;
+import { parseSession } from "./session-state.ts";
+
+export const SAVE_VERSION = 3;
 export type Profile = { label: string; progress: Progress };
 type Obj = Record<string, unknown>;
 const obj = (v: unknown): Obj =>
@@ -31,6 +33,7 @@ const strings = (v: unknown) =>
 
 export function freshProgress(): Progress {
   return {
+    session: null,
     intro: false,
     setupDone: false,
     done: {},
@@ -87,6 +90,16 @@ export function normalizeProgress(value: unknown): Progress {
       ]),
     ) as Progress["settings"]["volume"],
   };
+  p.session = parseSession(v.session, p.settings.level);
+  if (
+    p.session?.mode === "story" &&
+    FOREST.slice(
+      0,
+      FOREST.findIndex((s) => s.id === p.session!.target),
+    ).some((s) => !p.done[s.id])
+  )
+    p.session = null;
+  if (p.session?.mode === "glade" && FOREST.some((s) => !p.done[s.id])) p.session = null;
   p.skills = Object.fromEntries(
     entries(v.skills)
       .filter(([k]) => Object.hasOwn(SKILL_NAMES, k))
@@ -140,7 +153,12 @@ export function parseSave(raw: string): {
 } {
   if (raw.length > 2_000_000) throw new Error("Файл слишком большой (максимум 2 МБ)");
   const v = obj(JSON.parse(raw));
-  if (v.schemaVersion !== undefined && v.schemaVersion !== 1 && v.schemaVersion !== SAVE_VERSION)
+  if (
+    v.schemaVersion !== undefined &&
+    v.schemaVersion !== 1 &&
+    v.schemaVersion !== 2 &&
+    v.schemaVersion !== SAVE_VERSION
+  )
     throw new Error("Версия сохранения не поддерживается. Обновите игру.");
   if (v.profiles !== undefined) {
     const rows = entries(v.profiles);

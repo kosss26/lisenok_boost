@@ -68,5 +68,7 @@ test("automatic pointing can be disabled while manual help stays available", asy
   assert.equal(await page.locator('.friend-fox-btn[data-guide="2"]').count(), 0);
   assert.equal(await page.locator(".option.is-hint").count(), 0);
   await page.click(".hint-btn");
+  await page.click(".hint-btn");
+  await page.click(".hint-btn");
   await page.waitForSelector('.option[data-answer="1"].is-hint');
 });

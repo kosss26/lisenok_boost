@@ -58,14 +58,26 @@ function fill() {
       const cache = await caches.open(CACHE);
       if ((await cache.keys()).length < URLS.length) return;
       const keys = await caches.keys();
-      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      // Retain the previous version for tabs still using its code. Never remove other apps' caches.
+      const older = keys.filter((k) => k.startsWith("lisenok-") && k !== CACHE);
+      await Promise.all(older.slice(0, -1).map((k) => caches.delete(k)));
     })
     .finally(() => (filling = null));
   return filling;
 }
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(store(SHELL).then(() => self.skipWaiting()));
+  event.waitUntil(
+    store(SHELL).then(async () => {
+      const cache = await caches.open(CACHE);
+      const complete = await Promise.all(SHELL.map((u) => cache.match(u)));
+      if (complete.some((hit) => !hit)) {
+        await caches.delete(CACHE);
+        throw new Error("Incomplete offline shell");
+      }
+      // An update waits until the player chooses it between lessons.
+    }),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -75,6 +87,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("message", (event) => {
+  if (event.data === "activate-update") event.waitUntil(self.skipWaiting());
   if (event.data === "fill") event.waitUntil(fill());
   if (event.data === "status") {
     caches.open(CACHE).then(async (cache) => {
@@ -91,20 +104,28 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (req.mode === "navigate") {
     // the game is one page: any address opens it, from the cache when offline
-    event.respondWith(fetch(req).catch(() => caches.match("/", { ignoreSearch: true })));
+    event.respondWith(
+      fetch(req).catch(() =>
+        caches.open(CACHE).then((cache) => cache.match("/", { ignoreSearch: true })),
+      ),
+    );
     return;
   }
   event.respondWith(
-    caches.match(req, { ignoreVary: true }).then(
-      (hit) =>
-        hit ||
-        fetch(req).then((res) => {
-          if (res.ok && res.type === "basic") {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        }),
-    ),
+    caches
+      .open(CACHE)
+      .then((cache) => cache.match(req, { ignoreVary: true }))
+      .then((hit) => hit || caches.match(req, { ignoreVary: true }))
+      .then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            if (res.ok && res.type === "basic") {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(req, copy));
+            }
+            return res;
+          }),
+      ),
   );
 });

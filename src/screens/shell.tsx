@@ -16,6 +16,9 @@ import {
   useProgress,
   getActiveProfile,
 } from "../game/progress";
+import { SaveNotice } from "../components/save-notice";
+import { MediaNotice } from "../components/media-notice";
+import { UpdateNotice } from "../components/update-notice";
 import { Parents } from "../components/parents";
 import { useParentsOpen } from "../components/parents-state";
 import { Fox, HoldButton, ParentsButton } from "../components/kit";
@@ -73,6 +76,9 @@ export function Shell() {
     <div className={`app ${parentsOpen || resting ? "is-paused" : ""}`}>
       <div className="game-root" key={getActiveProfile()}>
         <Outlet />
+        <MediaNotice />
+        <SaveNotice />
+        <UpdateNotice />
       </div>
       {resting && <RestScreen />}
       {parentsOpen && <Parents />}

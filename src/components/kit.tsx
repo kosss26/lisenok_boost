@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { art } from "../game/assets";
 import { sfx } from "../game/audio";
 import { openParents } from "./parents-state";
+import { MediaImage } from "./media-image";
 import { IconBack, IconGear } from "./icons";
 import { motionArt, animatedFoxPose, useMotionAllowed } from "../game/motion";
 
@@ -21,7 +22,7 @@ export function Pic({
   style?: React.CSSProperties;
 }) {
   return (
-    <img
+    <MediaImage
       ref={ref}
       className={className}
       src={art(name)}

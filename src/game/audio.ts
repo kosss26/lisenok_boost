@@ -6,6 +6,8 @@
 import { NO_OPUS, formats, musicUrl, sfxUrl, voiceUrl } from "./assets";
 import type { Scene } from "./assets";
 
+import { reportAudioIssue, clearAudioIssue } from "./media";
+
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let voiceBus: GainNode | null = null;
@@ -133,6 +135,7 @@ function decode(url: string): Promise<AudioBuffer | null> {
     p = bytes(url)
       .then((data) => context().decodeAudioData(data.slice(0)))
       .then((b) => {
+        if (/\/voice\//.test(url)) clearAudioIssue();
         buffers.set(url, b);
         return b;
       })
@@ -148,6 +151,7 @@ function decode(url: string): Promise<AudioBuffer | null> {
           }
           return decode(url.replace(/\.ogg(\?|$)/, ".mp3$1"));
         }
+        if (/\/voice\//.test(url)) reportAudioIssue();
         return null; // a missing clip never blocks the game
       });
     decoding.set(url, p);

@@ -105,6 +105,15 @@ export function WorldMap() {
           <Pic name="chest" />
         </button>
         <StarCount n={stars} total={FOREST.length} />
+        <button
+          type="button"
+          className="round-btn practice-btn"
+          aria-label="Практика: выбрать навык"
+          onClick={() => void navigate({ to: "/practice" })}
+        >
+          <Pic name="book" />
+          <small>Практика</small>
+        </button>
         <ParentsButton />
       </div>
     </Scene>

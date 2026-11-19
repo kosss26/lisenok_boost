@@ -5,6 +5,8 @@ import { say, sfx, startMusic, stopVoice, unlockAudio } from "../game/audio";
 import { update, useProgress } from "../game/progress";
 import { markGreeted } from "../game/greeting";
 
+import { ProfileChip } from "../components/profile-chip";
+import { sessionLocation } from "../game/session-state";
 import { Setup } from "../components/setup";
 import { useModal } from "../game/modal";
 
@@ -29,6 +31,7 @@ export function Title() {
     <Scene bg="bg-clearing" className="title-screen">
       <div className="title-sky" />
       <ParentsButton />
+      <ProfileChip />
       <div className="title-stars" aria-hidden>
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <Pic key={i} name="star" className={`title-star s${i}`} />
@@ -58,6 +61,24 @@ export function Title() {
           }}
         >
           Играть
+        </button>
+      )}
+      {p.session && !story && !setup && (
+        <button
+          type="button"
+          className="resume-lesson"
+          onClick={() => {
+            unlockAudio();
+            startMusic();
+            void navigate({ to: sessionLocation(p.session!) });
+          }}
+        >
+          <strong>Продолжить занятие</strong>
+          <span>
+            {p.session.phase === "reward"
+              ? "Твоя награда ждёт!"
+              : `Задание ${p.session.step + 1} из 5`}
+          </span>
         </button>
       )}
       {setup && <Setup onClose={() => setSetup(false)} onDone={startStory} />}

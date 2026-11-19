@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { MediaImage } from "./media-image";
 import { art } from "../game/assets";
 import { motionArt, animatedFoxPose, useMotionAllowed } from "../game/motion";
 
@@ -50,7 +51,7 @@ export function PoseSprite({
       aria-label={label}
     >
       {layers.previous && (
-        <img
+        <MediaImage
           key={`old-${layers.previous}`}
           src={art(layers.previous)}
           className="pose-layer pose-out"
@@ -58,7 +59,7 @@ export function PoseSprite({
           draggable={false}
         />
       )}
-      <img
+      <MediaImage
         key={layers.shown}
         src={art(layers.shown)}
         className={`pose-layer pose-in ${imageClassName}`}

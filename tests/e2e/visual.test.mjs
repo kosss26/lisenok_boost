@@ -76,6 +76,8 @@ test("pose sprites decode before appearing, settle and respect reduced motion", 
     "none",
   );
   await page.click(".hint-btn");
+  await page.click(".hint-btn");
+  await page.click(".hint-btn");
   await page.waitForFunction(() =>
     document.querySelector(".friend-fox .pose-in")?.src.includes("fox-point"),
   );

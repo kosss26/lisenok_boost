@@ -1,6 +1,7 @@
+import { NotFound } from "./recovery";
 import { Modal } from "../components/modal";
 import { PoseSprite } from "../components/pose-sprite";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST, timeOf, weatherOf, type Stop } from "../content/forest";
 import { StopWeather } from "../components/weather";
@@ -13,21 +14,11 @@ import { DifficultyBadge } from "../components/difficulty";
 import { PlaceStar } from "../components/sky";
 import { giftKey } from "../content/voice";
 import { say, setScene, sfx, stopVoice } from "../game/audio";
-import {
-  easeNow,
-  finishStop,
-  freeSkySpot,
-  getProgress,
-  placeStar,
-  recordTask,
-  stopOpen,
-  tuneFor,
-  weakWordIds,
-} from "../game/progress";
-import { makeRound, type Task } from "../game/tasks";
+import { freeSkySpot, getProgress, placeStar, stopOpen, useProgress } from "../game/progress";
+import { completeSessionTask, clearSession } from "../game/sessions";
+import { LessonDraftContext } from "../game/lesson-draft";
+import { useLessonStart } from "../components/lesson-start";
 import { stopRoute } from "../router";
-
-type Phase = "hello" | "task" | "reward";
 
 export function StopScreen() {
   const { stopId } = stopRoute.useParams();
@@ -37,10 +28,11 @@ export function StopScreen() {
   const allowed = stop && stopOpen(getProgress(), index);
 
   useEffect(() => {
-    if (!allowed) void navigate({ to: "/forest", replace: true });
-  }, [allowed, navigate]);
+    if (stop && !allowed) void navigate({ to: "/forest", replace: true });
+  }, [allowed, navigate, stop]);
   useEffect(() => () => stopVoice(), []);
 
+  if (!stop) return <NotFound />;
   if (!allowed) return null;
   return <StopGame key={stop.id} stopIndex={index} />;
 }
@@ -48,59 +40,42 @@ export function StopScreen() {
 function StopGame({ stopIndex }: { stopIndex: number }) {
   const stop = FOREST[stopIndex];
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<Phase>("hello");
+  const p = useProgress();
+  const session = p.session?.mode === "story" && p.session.target === stop.id ? p.session : null;
+  const phase = session?.phase ?? "hello";
+  const round = session?.round ?? [];
+  const step = session?.step ?? 0;
+  const reward = session?.reward;
+  const [mood, setMood] = useState<Mood>("idle");
+  const [guide, setGuide] = useState<Guide>(null);
+  const [starUp, setStarUp] = useState(
+    Boolean(session?.phase === "reward" && (!session.reward?.toPlace || p.sky[stop.id])),
+  );
+  const { request, dialog } = useLessonStart();
   useEffect(() => {
     setScene(phase === "task" ? "tasks" : phase === "reward" ? "celebrate" : "map");
   }, [phase]);
   useEffect(() => () => setScene("map"), []);
-  const [round, setRound] = useState<Task[]>(() =>
-    makeRound(
-      stop.skill,
-      tuneFor(getProgress(), stopIndex),
-      Math.random,
-      weakWordIds(getProgress()),
-    ),
-  );
-  const [step, setStep] = useState(0);
-  const [mood, setMood] = useState<Mood>("idle");
-  const [guide, setGuide] = useState<Guide>(null);
-  const [reward, setReward] = useState<{ first: boolean; toPlace: boolean } | null>(null);
-  const mistakes = useRef(0);
-
-  const solved = (m: number, hinted: boolean) => {
-    recordTask(round[step].skill, m, hinted, round[step].word);
-    mistakes.current += m + (hinted && m === 0 ? 1 : 0);
-    if (step + 1 < round.length) {
-      // a mistake: the rest of the round gets easier at once (the automatic shift goes down)
-      if (m >= 1 && getProgress().settings.auto) {
-        easeNow(Math.min(0.15, 0.05 * m));
-        const easier = makeRound(
-          stop.skill,
-          tuneFor(getProgress(), stopIndex),
-          Math.random,
-          weakWordIds(getProgress()),
-        );
-        setRound([...round.slice(0, step + 1), ...easier.slice(step + 1)]);
-      }
-      setStep(step + 1);
-      return;
+  useEffect(() => {
+    if (reward && !reward.toPlace) setStarUp(true);
+  }, [reward]);
+  const solved = (m: number, h: boolean) => {
+    if (!session) return;
+    completeSessionTask(session.id, step, m, h);
+    setMood("idle");
+    setGuide(null);
+    if (step === 4) {
+      void sfx("star");
+      if (!getProgress().sky[stop.id]) void say(["sky-place"]);
     }
-    const r = finishStop(stop.id, mistakes.current);
-    const toPlace = !getProgress().sky[stop.id];
-    setReward({ ...r, toPlace });
-    setStarUp(!toPlace);
-    setPhase("reward");
-    void sfx("star");
-    if (toPlace) window.setTimeout(() => void say(["sky-place"]), 600);
   };
-  /** the star hangs in the sky (or was there already): now the gift and the thanks */
-  const [starUp, setStarUp] = useState(false);
 
   const leaveReward = () => {
     void sfx("tap");
     stopVoice();
     if (!getProgress().sky[stop.id])
       placeStar(stop.id, ...freeSkySpot(getProgress(), stopIndex + 1));
+    if (session) clearSession(session.id);
     void navigate({ to: "/forest" });
   };
 
@@ -110,6 +85,7 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
       className={`stop-screen phase-${phase}`}
       boxed={<StopWeather time={timeOf(stopIndex)} weather={weatherOf(stopIndex)} />}
     >
+      {dialog}
       <div className="top-bar">
         <BackButton to="/forest" label="К тропинке" />
         <div className="dots" aria-label={`Задание ${step + 1} из ${round.length}`}>
@@ -129,20 +105,22 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
           onHelp={() => {
             void sfx("tap");
             stopVoice();
-            setPhase("task");
+            request("story", stop.id);
           }}
         />
       )}
 
-      {phase === "task" && (
+      {phase === "task" && session && (
         <>
-          <TaskView
-            key={step}
-            task={round[step]}
-            onSolved={solved}
-            onMood={setMood}
-            onGuide={setGuide}
-          />
+          <LessonDraftContext.Provider value={{ id: session.id, step }}>
+            <TaskView
+              key={`${session.id}-${step}`}
+              task={round[step]}
+              onSolved={solved}
+              onMood={setMood}
+              onGuide={setGuide}
+            />
+          </LessonDraftContext.Provider>
           <TaskFriends who={stop.resident} name={stop.name} mood={mood} guide={guide} />
         </>
       )}

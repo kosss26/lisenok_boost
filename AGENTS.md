@@ -13,7 +13,7 @@
 - UI text and voice are Russian. Test on a phone viewport: `npm run test:e2e` (dev server on :8080).
 - Correct answers carry `data-answer="1"` (used by the e2e tests).
 
-- Save schema/migrations: `src/game/save.ts`, current v2. Never merge unvalidated backup JSON.
+- Save schema/migrations: `src/game/save.ts`, current v3. Never merge unvalidated backup JSON.
   `progress.ts` exposes the active profile at the top level and stores all profiles atomically.
   Keep legacy statistics as history; independent-answer counters start with new answers.
 - Answer timing/feedback is in `src/game/answering.ts`; count thinking time after narration,
@@ -21,3 +21,7 @@
 - New adult dialogs use `useModal` from `src/game/modal.ts` for focus and inert background.
 - This repository predates the sea world and SpeechKit migration. Do not claim either is shipped.
   Existing speech is Silero CC BY-NC; no commercial voice rights are implied.
+
+- A profile has one resumable lesson (`session-state.ts`, `sessions.ts`). Persist concrete tasks and draft before praise; statistics + next step + reward are one guarded update. Never count a resumed completed draft twice. Practice awards finds, never story stars.
+- Hint stages: method, remove a distractor, then answer. First two stages use `methodVoice`, which must not read the answer or claim that an unhighlighted tile is glowing.
+- Service worker updates wait for an explicit menu action; a failed shell install must be rejected and removed. Retain the previous offline cache and unrelated caches.

@@ -10,6 +10,10 @@ import { IconBulb } from "./icons";
 
 import { useAnswering } from "../game/answering";
 
+import { useTaskDraft } from "../game/lesson-draft";
+import { useTaskMediaUnavailable } from "../game/media";
+import { methodHint } from "../game/hints";
+
 const LINES = voiceLines();
 export type Solved = (mistakes: number, hinted: boolean) => void;
 export type Mood = "idle" | "happy" | "oops";
@@ -74,7 +78,13 @@ function PromptBar({
       >
         <SpeakerIcon />
       </button>
-      <p className="prompt-text">{shown(LINES[task.prompt[0]])}</p>
+      <div className="prompt-copy">
+        <p className="prompt-text">{shown(LINES[task.prompt[0]])}</p>
+        <details className="prompt-transcript">
+          <summary>Текст задания</summary>
+          <p>{task.prompt.map((k) => shown(LINES[k] ?? "")).join(" ")}</p>
+        </details>
+      </div>
       <button type="button" className="round-btn hint-btn" aria-label="Подсказка" onClick={onHint}>
         <IconBulb />
       </button>
@@ -95,10 +105,16 @@ function Choice({
   onGuide: OnGuide;
 }) {
   const a = useAnswering(task, onSolved, onMood);
+  const imageBlocked = useTaskMediaUnavailable() > 0;
   const rootRef = useRef<HTMLDivElement | null>(null);
   useGuideTarget(a.guide, rootRef, '.option[data-answer="1"]', onGuide);
-  const [off, setOff] = useState<string[]>([]);
-  const [picked, setPicked] = useState<string | null>(null);
+  const { initial, save } = useTaskDraft();
+  const [off, setOff] = useState<string[]>(initial.current.off);
+  const [picked, setPicked] = useState<string | null>(initial.current.picked);
+  const pruned =
+    a.hintStage === 2 && task.options.filter((o) => !off.includes(o.id)).length > 2
+      ? task.options.find((o) => o.id !== task.answer && !off.includes(o.id))?.id
+      : undefined;
   const [shaking, setShaking] = useState<string | null>(null);
 
   // drag an answer onto the card (into the "?" box when there is one); tapping works as well
@@ -123,13 +139,14 @@ function Choice({
   // counting tasks: on the right answer the objects hop one by one while the voice counts them
   const along = useRef<(() => Promise<void>) | null>(null);
   const tap = (o: Option) => {
-    if (a.solved || off.includes(o.id)) return;
+    if (imageBlocked || a.solved || off.includes(o.id) || o.id === pruned) return;
     if (o.id === task.answer) {
       setPicked(o.id);
-      if (along.current) a.right([], along.current);
-      else a.right(o.say ? [o.say] : []);
+      if (along.current) a.right([], along.current, { picked: o.id });
+      else a.right(o.say ? [o.say] : [], undefined, { picked: o.id });
     } else {
       setOff((x) => [...x, o.id]);
+      save({ off: [...off, o.id] });
       setShaking(o.id);
       window.setTimeout(() => setShaking(null), 500);
       a.wrong(o.say);
@@ -139,6 +156,7 @@ function Choice({
   return (
     <div ref={rootRef} className={`task task-${task.skill} layout-${task.layout} guide-${a.guide}`}>
       <PromptBar task={task} onRepeat={a.repeat} onHint={a.hint} />
+      <HintExplanation task={task} stage={a.hintStage} pruned={Boolean(pruned)} />
       <div
         ref={cardRef}
         className={`drop-card ${drag.near !== null ? "is-near" : ""} ${a.guide === 2 ? "is-target" : ""}`}
@@ -162,6 +180,7 @@ function Choice({
                 "option drag-item",
                 drag.dragging === o.id ? "is-dragging" : "",
                 off.includes(o.id) ? "is-off" : "",
+                o.id === pruned ? "is-pruned" : "",
                 picked === o.id ? "is-right" : "",
                 shaking === o.id ? "is-shaking" : "",
                 a.guide === 2 && isAnswer ? "is-hint" : "",
@@ -170,6 +189,7 @@ function Choice({
               ].join(" ")}
               data-answer={isAnswer ? "1" : undefined}
               data-option={o.id}
+              disabled={imageBlocked || o.id === pruned}
               aria-label={o.label ?? o.id}
               {...(off.includes(o.id) ? {} : drag.bind(o.id))}
               style={drag.style(o.id)}
@@ -463,21 +483,27 @@ function Build({
   onGuide: OnGuide;
 }) {
   const a = useAnswering(task, onSolved, onMood);
+  const imageBlocked = useTaskMediaUnavailable() > 0;
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const [used, setUsed] = useState<number[]>([]);
+  const { initial, save } = useTaskDraft();
+  const [used, setUsed] = useState<number[]>(initial.current.used);
   const [shaking, setShaking] = useState<number | null>(null);
   /** slots whose letter has landed (the letter flies there from its tile first) */
-  const [landed, setLanded] = useState<number[]>([]);
+  const [landed, setLanded] = useState<number[]>(initial.current.used.map((_, i) => i));
   const [flying, setFlying] = useState<Flight[]>([]);
   const slotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const pieceRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const placed = used.length;
   const done = placed === task.target.length;
+  const pruned =
+    a.hintStage === 2
+      ? task.pieces.findIndex((p, i) => !used.includes(i) && p !== task.target[placed])
+      : -1;
   const nextIdx = task.pieces.findIndex((p, i) => !used.includes(i) && p === task.target[placed]);
   useGuideTarget(a.guide, rootRef, '.piece[data-answer="1"]', onGuide);
 
   const tap = (i: number, dropped?: DOMRect) => {
-    if (done || used.includes(i)) return;
+    if (imageBlocked || done || used.includes(i) || i === pruned) return;
     if (task.pieces[i] === task.target[placed]) {
       const next = [...used, i];
       const slot = placed;
@@ -488,8 +514,9 @@ function Build({
       } else setLanded((l) => [...l, slot]);
       setUsed(next);
       if (next.length === task.target.length) {
-        a.right([task.prompt[1]]);
+        a.right([task.prompt[1]], undefined, { used: next });
       } else {
+        save({ used: next });
         void sfx("pick");
         void vibrate(12);
         a.poke();
@@ -522,6 +549,7 @@ function Build({
       className={`task task-${task.skill} task-build unit-${task.unit} guide-${a.guide}`}
     >
       <PromptBar task={task} onRepeat={a.repeat} onHint={a.hint} />
+      <HintExplanation task={task} stage={a.hintStage} pruned={pruned >= 0} />
       <div className="card card-build">
         <Pic name={task.pic} className="card-pic" />
         <div
@@ -560,11 +588,13 @@ function Build({
               "piece drag-item",
               drag.dragging === String(i) ? "is-dragging" : "",
               used.includes(i) ? "is-used" : "",
+              i === pruned ? "is-pruned" : "",
               shaking === i ? "is-shaking" : "",
               a.guide === 2 && i === nextIdx && !done ? "is-hint" : "",
               a.guide === 2 && i !== nextIdx && !used.includes(i) ? "is-faded" : "",
             ].join(" ")}
             data-answer={i === nextIdx ? "1" : undefined}
+            disabled={imageBlocked || i === pruned}
             aria-label={piece}
             ref={(el) => {
               pieceRefs.current[i] = el;
@@ -628,5 +658,29 @@ export function Burst() {
         <Pic key={i} name="star" className="burst-star" alt="" />
       ))}
     </span>
+  );
+}
+
+function HintExplanation({
+  task,
+  stage,
+  pruned = false,
+}: {
+  task: Task;
+  stage: number;
+  pruned?: boolean;
+}) {
+  if (!stage) return null;
+  return (
+    <p className="hint-explanation" data-hint-stage={stage} role="status">
+      <b>{stage === 1 ? "Попробуем так" : stage === 2 ? "Ещё немного помощи" : "Вот подсказка"}</b>{" "}
+      {stage === 1
+        ? methodHint(task)
+        : stage === 2
+          ? pruned
+            ? "Один неподходящий вариант убран. Сравни оставшиеся."
+            : "Сравни варианты ещё раз. Следующая подсказка покажет, что выбрать."
+          : "Лисёнок показывает, что выбрать. Попробуй сам!"}
+    </p>
   );
 }

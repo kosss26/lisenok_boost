@@ -28,6 +28,17 @@ export function Album() {
       <p className="album-sub">
         Лес · {p.gifts.length} из {FOREST.length}
       </p>
+      {p.gifts.some((g) => !p.opened.includes(g)) && (
+        <button
+          type="button"
+          className="album-new"
+          onClick={() =>
+            document.querySelector<HTMLButtonElement>(".album-slot.is-wrapped")?.focus()
+          }
+        >
+          Новые подарки: {p.gifts.filter((g) => !p.opened.includes(g)).length} · Открыть ↓
+        </button>
+      )}
       <div className="album-grid">
         {FOREST.map((s) => (
           <AlbumGift
@@ -36,6 +47,7 @@ export function Album() {
             gift={s.gift}
             name={s.giftName}
             resident={s.resident}
+            residentName={s.name}
             have={p.gifts.includes(s.gift)}
             wrapped={!p.opened.includes(s.gift)}
           />
@@ -91,6 +103,7 @@ function AlbumGift({
   gift,
   name,
   resident,
+  residentName,
   have,
   wrapped,
 }: {
@@ -98,6 +111,7 @@ function AlbumGift({
   gift: string;
   name: string;
   resident: string;
+  residentName: string;
   have: boolean;
   wrapped: boolean;
 }) {
@@ -122,13 +136,15 @@ function AlbumGift({
     <button
       type="button"
       className={`album-slot ${have ? "is-have" : "is-empty"} ${box ? "is-wrapped" : ""} ${anim}`}
-      aria-label={have ? (box ? `Подарок от жителя: открыть` : name) : "Пока не найдено"}
+      aria-label={have ? (box ? `Подарок от ${residentName}: открыть` : name) : "Пока не найдено"}
       data-gift={gift}
+      data-open-style={FOREST.findIndex((s) => s.id === stopId) % 3}
       onClick={tap}
       onAnimationEnd={(e) => {
         if (anim === "is-spin" && e.animationName === "gift-spin") setAnim("");
       }}
     >
+      {box && <span className="album-new-badge">Новый</span>}
       <Pic name={gift} className="album-pic" />
       {box && (
         <span className="gift-box" aria-hidden>

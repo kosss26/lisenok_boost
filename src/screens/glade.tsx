@@ -1,30 +1,19 @@
 import { Modal } from "../components/modal";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST } from "../content/forest";
-import { FINDS, nextFind } from "../content/glade";
+import { FINDS } from "../content/glade";
 import { wordKey } from "../content/voice";
 import { BackButton, Fox, Pic, Scene } from "../components/kit";
 import { TaskView, type Guide, type Mood } from "../components/tasks";
 import { TaskFriends } from "../components/friends";
 import { DifficultyBadge } from "../components/difficulty";
 import { say, setScene, sfx, stopVoice } from "../game/audio";
-import {
-  addFind,
-  forestDone,
-  getProgress,
-  gladeGrade,
-  recordTask,
-  weakSkills,
-  weakWordIds,
-} from "../game/progress";
-import { makePractice, type Task } from "../game/tasks";
-
-type Phase = "hello" | "task" | "find";
-const newRound = () => {
-  const p = getProgress();
-  return makePractice({ level: p.settings.level, g: gladeGrade(p) }, weakSkills(p), weakWordIds(p));
-};
+import { forestDone, getProgress, useProgress } from "../game/progress";
+import type { Skill } from "../content/forest";
+import { completeSessionTask, clearSession, startSession } from "../game/sessions";
+import { LessonDraftContext } from "../game/lesson-draft";
+import { useLessonStart } from "../components/lesson-start";
 
 /** Лесная полянка: endless practice after the forest — weak skills and words first, then review. */
 export function Glade() {
@@ -37,62 +26,79 @@ export function Glade() {
   return allowed ? <GladeGame /> : null;
 }
 
-function GladeGame() {
+export function GladeGame({
+  mode = "glade",
+  skill,
+}: {
+  mode?: "glade" | "practice";
+  skill?: Skill;
+}) {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<Phase>("hello");
-  const [round, setRound] = useState<Task[]>(newRound);
-  const [step, setStep] = useState(0);
+  const p = useProgress();
+  const target = mode === "glade" ? "mixed" : skill!;
+  const session = p.session?.mode === mode && p.session.target === target ? p.session : null;
+  const phase = session ? (session.phase === "reward" ? "find" : "task") : "hello";
+  const round = session?.round ?? [],
+    step = session?.step ?? 0;
+  const find = FINDS.find((f) => f.id === session?.reward?.find);
+  const all = session?.reward?.all ?? false;
   const [mood, setMood] = useState<Mood>("idle");
-  const [find, setFind] = useState<(typeof FINDS)[number] | null>(null);
-  const [all, setAll] = useState(false);
-  const roundNo = useRef(0);
-  const friend = FOREST[roundNo.current % FOREST.length];
   const [guide, setGuide] = useState<Guide>(null);
-
+  const friend = FOREST[step % FOREST.length];
+  const { request, dialog } = useLessonStart();
   useEffect(() => {
     setScene(phase === "task" ? "tasks" : phase === "find" ? "celebrate" : "map");
   }, [phase]);
-  useEffect(() => () => setScene("map"), []);
+  useEffect(
+    () => () => {
+      stopVoice();
+      setScene("map");
+    },
+    [],
+  );
   useEffect(() => {
-    if (phase !== "hello") return;
-    const t = window.setTimeout(() => void say(["glade-hello"]), 400);
-    return () => window.clearTimeout(t);
-  }, [phase]);
-
-  const solved = (m: number, hinted: boolean) => {
-    const task = round[step];
-    recordTask(task.skill, m, hinted, task.word);
-    if (step + 1 < round.length) {
-      setStep(step + 1);
-      return;
+    if (phase === "hello" && mode === "glade") {
+      const t = window.setTimeout(() => void say(["glade-hello"]), 400);
+      return () => window.clearTimeout(t);
     }
-    const before = getProgress().finds;
-    const f = nextFind(before);
-    const completes = FINDS.every((x) => x.id === f.id || before[x.id]) && !before[f.id];
-    addFind(f.id);
-    setFind(f);
-    setAll(completes);
-    setPhase("find");
-    void sfx("star");
-    void say(["glade-find", wordKey(f.id), ...(completes ? ["glade-all"] : []), "glade-more"]);
+  }, [phase, mode]);
+  const solved = (m: number, h: boolean) => {
+    if (!session) return;
+    completeSessionTask(session.id, step, m, h);
+    setMood("idle");
+    setGuide(null);
+    const done = getProgress().session;
+    if (done?.reward?.find) {
+      void sfx("star");
+      void say([
+        "glade-find",
+        wordKey(done.reward.find),
+        ...(done.reward.all ? ["glade-all"] : []),
+        "glade-more",
+      ]);
+    }
   };
-
   const again = () => {
     void sfx("tap");
     stopVoice();
-    roundNo.current++;
-    setRound(newRound());
-    setStep(0);
     setMood("idle");
-    setPhase("task");
+    setGuide(null);
+    if (session?.phase === "reward") startSession(mode, target);
+    else request(mode, target);
+  };
+  const back = mode === "practice" ? "/practice" : "/forest";
+  const leave = () => {
+    if (session) clearSession(session.id);
+    void navigate({ to: back });
   };
 
   const found = Object.keys(getProgress().finds).length;
 
   return (
     <Scene bg="bg-clearing" className={`stop-screen glade-screen phase-${phase}`}>
+      {dialog}
       <div className="top-bar">
-        <BackButton to="/forest" label="К тропинке" />
+        <BackButton to={back} label={mode === "practice" ? "Выбрать навык" : "К тропинке"} />
         <div className="dots" aria-label={`Задание ${step + 1} из ${round.length}`}>
           {round.map((_, i) => (
             <span
@@ -120,25 +126,23 @@ function GladeGame() {
         </div>
       )}
 
-      {phase === "task" && (
+      {phase === "task" && session && (
         <>
-          <TaskView
-            key={`${roundNo.current}-${step}`}
-            task={round[step]}
-            onSolved={solved}
-            onMood={setMood}
-            onGuide={setGuide}
-          />
+          <LessonDraftContext.Provider value={{ id: session.id, step }}>
+            <TaskView
+              key={`${session.id}-${step}`}
+              task={round[step]}
+              onSolved={solved}
+              onMood={setMood}
+              onGuide={setGuide}
+            />
+          </LessonDraftContext.Provider>
           <TaskFriends who={friend.resident} name={friend.name} mood={mood} guide={guide} />
         </>
       )}
 
       {phase === "find" && find && (
-        <Modal
-          className="reward glade-find"
-          label="Находка"
-          onClose={() => void navigate({ to: "/forest" })}
-        >
+        <Modal className="reward glade-find" label="Находка" onClose={leave}>
           <div className="reward-rays" aria-hidden />
           <Pic name={find.pic} className="find-pic" />
           <h2>Находка: {find.name.toLowerCase()}!</h2>
@@ -147,6 +151,9 @@ function GladeGame() {
             Находки: {Object.keys(getProgress().finds).length} из {FINDS.length}
           </p>
           <div className="glade-actions">
+            <button type="button" className="text-action" onClick={leave}>
+              К занятиям
+            </button>
             <button type="button" className="big-btn next-btn glade-again" onClick={again}>
               Ещё!
             </button>

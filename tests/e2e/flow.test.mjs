@@ -69,6 +69,11 @@ test("mistakes: soft retry, hint after the second, skill stats", async (t) => {
   assert.equal(await page.locator(".option.is-hint").count(), 0);
   await page.waitForTimeout(600);
   await wrong();
+  await page.waitForSelector('[data-hint-stage="1"]');
+  assert.equal(await page.locator(".option.is-hint").count(), 0);
+  await page.click(".hint-btn");
+  await page.waitForSelector('[data-hint-stage="2"]');
+  await page.click(".hint-btn");
   await page.waitForSelector(".option.is-hint[data-answer]");
   await page.locator('.option[data-answer="1"]').click();
   await page.waitForFunction(() => document.querySelectorAll(".dot.is-done").length >= 1);

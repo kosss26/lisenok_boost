@@ -23,6 +23,7 @@ import { IconClose } from "./icons";
 import { closeParents } from "./parents-state";
 
 import { useModal } from "../game/modal";
+import { useOfflineError } from "../game/offline";
 import { SaveTools } from "./save-tools";
 
 const TABS = ["Ребёнок", "Успехи", "Время", "Звук", "Данные", "Об игре"] as const;
@@ -37,8 +38,18 @@ function useOfflineStatus() {
       if (e.data?.type === "offline-status") setStatus({ have: e.data.have, total: e.data.total });
     };
     navigator.serviceWorker.addEventListener("message", onMsg);
-    void navigator.serviceWorker.getRegistration().then((r) => r?.active?.postMessage("status"));
-    return () => navigator.serviceWorker.removeEventListener("message", onMsg);
+    const ask = () => {
+      void navigator.serviceWorker
+        .getRegistration()
+        .then((r) => r?.active?.postMessage("status"))
+        .catch(() => {});
+    };
+    ask();
+    const timer = window.setInterval(ask, 2000);
+    return () => {
+      window.clearInterval(timer);
+      navigator.serviceWorker.removeEventListener("message", onMsg);
+    };
   }, []);
   return status;
 }
@@ -50,6 +61,7 @@ export function Parents() {
   const s = p.settings;
   const [tab, setTab] = useState<Tab>("Ребёнок");
   const offline = useOfflineStatus();
+  const offlineError = useOfflineError();
   const played = Math.round((p.playLog[today()] ?? 0) / 60);
   const weak = weakSkills(p);
 
@@ -318,11 +330,12 @@ export function Parents() {
           </p>
         )}
         <p className="offline-note">
-          {offline
-            ? offline.have >= offline.total
-              ? "✓ Игра сохранена на устройстве и работает без интернета."
-              : `Сохраняем игру для работы без интернета: ${offline.have} из ${offline.total}…`
-            : "Без интернета игра заработает после первого полного запуска."}
+          {offlineError ||
+            (offline
+              ? offline.have >= offline.total
+                ? "✓ Игра сохранена на устройстве и работает без интернета."
+                : `Сохраняем игру для работы без интернета: ${offline.have} из ${offline.total}…`
+              : "Без интернета игра заработает после первого полного запуска.")}
         </p>
         <HoldButton
           label="Сбросить прогресс: удерживайте"

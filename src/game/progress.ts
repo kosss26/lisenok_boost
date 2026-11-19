@@ -43,7 +43,10 @@ export type Settings = {
   limit: number;
   volume: { voice: number; sounds: number; music: number; forest: number };
 };
+import type { LessonSession } from "./session-state.ts";
+
 export type Progress = {
+  session: LessonSession | null;
   intro: boolean;
   setupDone: boolean;
   /** stop id -> how many times solved */
@@ -107,6 +110,13 @@ const subscribe = (l: () => void) => {
 };
 export function getProgress() {
   return state;
+}
+export function useProfileLabel() {
+  return useSyncExternalStore(
+    subscribe,
+    () => profiles[activeProfile]?.label ?? "Ребёнок",
+    () => "Ребёнок",
+  );
 }
 export function getActiveProfile() {
   return activeProfile;
@@ -191,7 +201,11 @@ export function renameProfile(label: string) {
   emit();
 }
 export const setSettings = (patch: Partial<Settings>) =>
-  update((p) => ({ ...p, settings: { ...p.settings, ...patch } }));
+  update((p) => ({
+    ...p,
+    session: patch.level && patch.level !== p.settings.level ? null : p.session,
+    settings: { ...p.settings, ...patch },
+  }));
 
 export function resetProgress() {
   update((p) => ({ ...freshProgress(), settings: p.settings, setupDone: true, intro: true }));
@@ -207,30 +221,37 @@ export const nextStopIndex = (p: Progress) => {
 export const stopOpen = (p: Progress, index: number) => index <= nextStopIndex(p);
 
 // ---------- answers ----------
-export function recordTask(skill: Skill, mistakes: number, hinted: boolean, word?: string) {
-  update((p) => {
-    const words = word
-      ? { ...p.words, [word]: nextWordStat(p.words[word], mistakes, hinted) }
-      : p.words;
-    const s = p.skills[skill] ?? { tasks: 0, firstTry: 0, mistakes: 0, hints: 0 };
-    return {
-      ...p,
-      words,
-      skills: {
-        ...p.skills,
-        [skill]: {
-          tasks: s.tasks + 1,
-          firstTry: s.firstTry + (mistakes === 0 && !hinted ? 1 : 0),
-          measured: (s.measured ?? 0) + 1,
-          independent: (s.independent ?? 0) + (mistakes === 0 && !hinted ? 1 : 0),
-          assisted: (s.assisted ?? 0) + (hinted ? 1 : 0),
-          retried: (s.retried ?? 0) + (mistakes > 0 && !hinted ? 1 : 0),
-          mistakes: s.mistakes + mistakes,
-          hints: s.hints + (hinted ? 1 : 0),
-        },
+export function withRecordedTask(
+  p: Progress,
+  skill: Skill,
+  mistakes: number,
+  hinted: boolean,
+  word?: string,
+): Progress {
+  const words = word
+    ? { ...p.words, [word]: nextWordStat(p.words[word], mistakes, hinted) }
+    : p.words;
+  const s = p.skills[skill] ?? { tasks: 0, firstTry: 0, mistakes: 0, hints: 0 };
+  return {
+    ...p,
+    words,
+    skills: {
+      ...p.skills,
+      [skill]: {
+        tasks: s.tasks + 1,
+        firstTry: s.firstTry + (mistakes === 0 && !hinted ? 1 : 0),
+        measured: (s.measured ?? 0) + 1,
+        independent: (s.independent ?? 0) + (mistakes === 0 && !hinted ? 1 : 0),
+        assisted: (s.assisted ?? 0) + (hinted ? 1 : 0),
+        retried: (s.retried ?? 0) + (mistakes > 0 && !hinted ? 1 : 0),
+        mistakes: s.mistakes + mistakes,
+        hints: s.hints + (hinted ? 1 : 0),
       },
-    };
-  });
+    },
+  };
+}
+export function recordTask(skill: Skill, mistakes: number, hinted: boolean, word?: string) {
+  update((p) => withRecordedTask(p, skill, mistakes, hinted, word));
 }
 
 // ---------- difficulty ----------
