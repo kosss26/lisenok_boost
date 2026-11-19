@@ -5,10 +5,19 @@ import { say, sfx, startMusic, stopVoice, unlockAudio } from "../game/audio";
 import { update, useProgress } from "../game/progress";
 import { markGreeted } from "../game/greeting";
 
+import { Setup } from "../components/setup";
+import { useModal } from "../game/modal";
+
 export function Title() {
   const p = useProgress();
   const navigate = useNavigate();
   const [story, setStory] = useState(false);
+  const [setup, setSetup] = useState(false);
+  const startStory = () => {
+    setSetup(false);
+    setStory(true);
+    void say(["intro"]);
+  };
 
   const go = () => {
     stopVoice();
@@ -30,7 +39,7 @@ export function Title() {
         <em>и звёзды</em>
       </h1>
       <Fox pose="wave" className="title-fox" />
-      {!story && (
+      {!story && !setup && (
         <button
           type="button"
           className="big-btn play-btn"
@@ -38,9 +47,10 @@ export function Title() {
             unlockAudio();
             void sfx("tap");
             startMusic();
-            if (!p.intro) {
-              setStory(true);
-              void say(["intro"]);
+            if (!p.setupDone) {
+              setSetup(true);
+            } else if (!p.intro) {
+              startStory();
             } else {
               markGreeted(false);
               go();
@@ -50,26 +60,43 @@ export function Title() {
           Играть
         </button>
       )}
+      {setup && <Setup onClose={() => setSetup(false)} onDone={startStory} />}
       {story && (
-        <div className="story-card" role="dialog" aria-label="История">
-          <Pic name="star-face" className="story-star" />
-          <p>
-            Однажды ночью с неба упали звёзды и рассыпались по всему свету. Лисёнок хочет вернуть их
-            домой, на небо. Поможешь ему?
-          </p>
-          <button
-            type="button"
-            className="big-btn"
-            onClick={() => {
-              void sfx("tap");
-              markGreeted(true);
-              go();
-            }}
-          >
-            Помогу!
-          </button>
-        </div>
+        <Story
+          onClose={() => {
+            stopVoice();
+            setStory(false);
+          }}
+          onNext={() => {
+            void sfx("tap");
+            markGreeted(true);
+            go();
+          }}
+        />
       )}
     </Scene>
+  );
+}
+
+function Story({ onClose, onNext }: { onClose: () => void; onNext: () => void }) {
+  const ref = useModal(onClose);
+  return (
+    <div
+      ref={ref}
+      tabIndex={-1}
+      className="story-card"
+      role="dialog"
+      aria-modal="true"
+      aria-label="История"
+    >
+      <Pic name="star-face" className="story-star" />
+      <p>
+        Однажды ночью с неба упали звёзды и рассыпались по всему свету. Лисёнок хочет вернуть их
+        домой, на небо. Поможешь ему?
+      </p>
+      <button type="button" className="big-btn" onClick={onNext}>
+        Помогу!
+      </button>
+    </div>
   );
 }

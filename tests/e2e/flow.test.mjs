@@ -6,6 +6,8 @@ import { artRe, openPhone, playStop, saved } from "./helpers.mjs";
 test("first launch: story, map, only the forest is open", async (t) => {
   const { page, errors } = await openPhone(t);
   await page.click(".play-btn");
+  await page.locator(".setup-card .level-card").first().click();
+  await page.locator('.setup-card button[type="submit"]').click();
   await page.waitForSelector(".story-card");
   await page.click(".story-card .big-btn");
   await page.waitForSelector(".map-screen");

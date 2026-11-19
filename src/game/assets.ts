@@ -11,8 +11,12 @@ export const NO_OPUS = "lisenok:no-opus";
 
 export async function detectFormats() {
   if (!import.meta.env.PROD) return;
-  formats.opus =
-    new Audio().canPlayType('audio/ogg; codecs="opus"') !== "" && !localStorage.getItem(NO_OPUS);
+  formats.opus = new Audio().canPlayType('audio/ogg; codecs="opus"') !== "";
+  try {
+    if (localStorage.getItem(NO_OPUS)) formats.opus = false;
+  } catch {
+    /* storage may be disabled */
+  }
   formats.avif = await new Promise<boolean>((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img.width > 0);
@@ -24,8 +28,7 @@ export async function detectFormats() {
 
 /** "/voice/hi.mp3" → "/voice/hi.mp3?v=1a2b3c4d" (cache-busting for the immutable media cache). */
 export function asset(path: string) {
-  const folder = path.split("/")[1];
-  const v = ASSET_VERSIONS[folder];
+  const v = ASSET_VERSIONS[path];
   return v ? `${path}?v=${v}` : path;
 }
 const sound = (path: string) => asset(formats.opus ? path.replace(/\.mp3$/, ".ogg") : path);

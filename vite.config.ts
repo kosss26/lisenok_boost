@@ -3,6 +3,7 @@ import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync 
 import { join, relative } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { ASSET_VERSIONS } from "./src/game/asset-versions.ts";
 
 /** Every file under `dir`, as "/a/b.ext" URLs. */
 function walk(dir: string, root = dir): string[] {
@@ -29,18 +30,14 @@ function offlinePlugin(): Plugin {
     },
     closeBundle() {
       // AVIF / Opus copies made by tools/encode-media.py
-      if (existsSync("tmp/media-cache")) cpSync("tmp/media-cache", outDir, { recursive: true });
-      const versions = readFileSync("src/game/asset-versions.ts", "utf8");
-      const v = Object.fromEntries(
-        [...versions.matchAll(/"(\w+)": "(\w+)"/g)].map((m) => [m[1], m[2]]),
-      );
+      for (const folder of ["art", "voice", "sfx", "music"]) {
+        const dir = `tmp/media-cache/${folder}`;
+        if (existsSync(dir)) cpSync(dir, join(outDir, folder), { recursive: true });
+      }
       const files = walk(outDir).filter((f) => f !== "/sw.js" && !f.endsWith(".map"));
       const urls = files.map((f) => {
-        const folder = f.split("/")[1];
         if (f === "/index.html") return "/";
-        return v[folder] && ["art", "voice", "sfx", "music"].includes(folder)
-          ? `${f}?v=${v[folder]}`
-          : f;
+        return ASSET_VERSIONS[f] ? `${f}?v=${ASSET_VERSIONS[f]}` : f;
       });
       const hash = createHash("sha1");
       for (const f of files) hash.update(f).update(readFileSync(join(outDir, f)));
@@ -70,6 +67,18 @@ function mediaCache(): Plugin {
 
 export default defineConfig({
   plugins: [react(), offlinePlugin(), mediaCache()],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: "vendor", test: /node_modules/ },
+            { name: "media-versions", test: /asset-versions\.ts$/ },
+          ],
+        },
+      },
+    },
+  },
   server: { host: "0.0.0.0", port: 8080, allowedHosts: true },
   preview: { host: "0.0.0.0", port: 8081, allowedHosts: true },
 });

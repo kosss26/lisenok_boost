@@ -4,7 +4,7 @@ import { FOREST, WORLDS } from "../content/forest";
 import { NAMES } from "../content/names";
 import { Fox, ParentsButton, Pic, Scene, StarCount } from "../components/kit";
 import { say, sfx } from "../game/audio";
-import { IconLock, IconStar } from "../components/icons";
+import { IconStar } from "../components/icons";
 import { greeting } from "../game/greeting";
 import { getProgress, starsIn, useProgress } from "../game/progress";
 
@@ -38,6 +38,11 @@ export function WorldMap() {
               key={w.id}
               type="button"
               className={`world world-${w.id} ${w.open ? "is-open" : "is-locked"} ${shake === w.id ? "is-shaking" : ""}`}
+              aria-label={
+                w.open
+                  ? `${w.name}: ${stars} из ${FOREST.length} звёзд`
+                  : `${w.name}: скоро появится`
+              }
               style={{ left: `${w.x}%`, top: `${w.y}%` }}
               onClick={() => {
                 if (w.open) {
@@ -48,7 +53,7 @@ export function WorldMap() {
                 void sfx("tap");
                 setShake(w.id);
                 window.setTimeout(() => setShake(null), 600);
-                void say([stars < FOREST.length ? "locked" : "locked-soon"]);
+                void say(["locked-soon"]);
               }}
             >
               <span className="world-sign">
@@ -58,9 +63,7 @@ export function WorldMap() {
                     <IconStar /> {stars}/{FOREST.length}
                   </small>
                 ) : (
-                  <small className="lock" aria-label="закрыто">
-                    <IconLock />
-                  </small>
+                  <small className="coming-soon">Скоро</small>
                 )}
               </span>
             </button>

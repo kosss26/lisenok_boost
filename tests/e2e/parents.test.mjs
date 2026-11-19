@@ -16,7 +16,7 @@ test("a short tap does not open it, holding does; settings are saved", async (t)
   await page.waitForSelector(".parents");
   await page.selectOption(".parents select", "masha");
   await page.click(".level-card >> nth=2");
-  await page.click(".parents .switch input");
+  await page.getByRole("checkbox", { name: /Подстраивать сложность автоматически/ }).uncheck();
   await page.click(".parents-tab >> text=Звук");
   await page.locator("#vol-music").fill("0.2");
   const s = (await saved(page)).settings;

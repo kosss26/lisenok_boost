@@ -1,0 +1,236 @@
+/* Focus, calmer task scenes and clear distinctions between effort and rewards. */
+:focus-visible {
+  outline: 3px solid #155f78;
+  outline-offset: 4px;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.game-root {
+  position: absolute;
+  inset: 0;
+}
+.phase-task .scene-bg {
+  filter: blur(3px) saturate(0.65);
+  opacity: 0.65;
+}
+.phase-task .scene-box {
+  background: #eee6cf;
+}
+.phase-task .task {
+  isolation: isolate;
+}
+.stop.is-locked {
+  opacity: 0.55;
+}
+.stop.is-next {
+  z-index: 12;
+}
+.stop-next-label {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  border-radius: 14px;
+  background: #fff8ea;
+  border: 2px solid var(--teal);
+  padding: 4px 12px;
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  color: #195d56;
+}
+.world.is-locked .world-sign {
+  opacity: 0.9;
+}
+.coming-soon {
+  font-size: 13px;
+  color: #fff6dc;
+}
+.map-screen .scene-box {
+  width: min(100cqw, calc(100cqh * 9 / 16));
+  height: min(100cqh, calc(100cqw * 16 / 9));
+}
+.map-screen {
+  background: #e5d3ad;
+}
+.diff-steps {
+  display: inline-flex;
+  gap: 5px;
+  height: 24px;
+  align-items: flex-end;
+}
+.diff-step {
+  display: block;
+  width: 10px;
+  height: 9px;
+  border-radius: 3px 3px 1px 1px;
+  background: #c5b89c;
+}
+.diff-step:nth-child(2) {
+  height: 16px;
+}
+.diff-step:nth-child(3) {
+  height: 24px;
+}
+.diff-step.is-on {
+  background: #267f75;
+}
+.diff-steps.is-big {
+  transform: scale(1.2);
+  transform-origin: left bottom;
+  margin: 4px;
+}
+.diff-card {
+  position: relative;
+  padding-top: 58px;
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+}
+.dialog-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #efe5d2;
+  color: #4a2f1b;
+  font-size: 30px;
+}
+.parents-tabs {
+  flex-shrink: 0;
+}
+.parents-tab {
+  flex: 0 0 auto;
+  min-width: 80px;
+}
+.parents-head,
+.parents-foot {
+  flex-shrink: 0;
+}
+.parents-body {
+  min-height: 0;
+}
+.field input:not([type="range"]) {
+  width: 100%;
+  font: inherit;
+  padding: 12px;
+  border: 2px solid #e3d6bd;
+  border-radius: 12px;
+  background: #fff;
+}
+.skill-detail {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #685943;
+  margin-top: 4px;
+}
+.skills li {
+  grid-template-columns: minmax(0, 1fr) 60px 40px;
+}
+.save-tools p,
+.credits p {
+  line-height: 1.5;
+}
+.text-action {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 2px solid #c8ded6;
+  border-radius: 12px;
+  background: #e4f2ed;
+  color: #195d56;
+  font-weight: 800;
+}
+.save-actions,
+.save-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.save-warning {
+  background: #fff0d3;
+  color: #674012;
+  padding: 10px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+.save-message {
+  font-weight: 700;
+}
+.setup-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  padding: max(12px, var(--safe-top)) 12px max(12px, var(--safe-bottom));
+  display: grid;
+  place-items: center;
+  background: rgb(24 35 50 / 0.65);
+}
+.setup-card {
+  position: relative;
+  width: min(100%, 480px);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 52px 20px 24px;
+  background: var(--paper);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+.setup-card h2 {
+  margin: 0;
+  font-size: 24px;
+}
+.setup-card p {
+  line-height: 1.4;
+}
+.setup-card fieldset {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+}
+.setup-card legend {
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.setup-card .big-btn {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 22px;
+}
+.credits a {
+  color: #155f78;
+  text-decoration: underline;
+}
+@media (min-width: 768px) and (min-height: 700px) {
+  .app {
+    max-width: 600px;
+  }
+}
+@media (max-height: 650px) {
+  .parents-foot {
+    padding: 8px 14px;
+  }
+  .parents-foot p {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .parents-head {
+    padding-top: 6px;
+  }
+  .setup-card {
+    padding: 48px 16px 16px;
+  }
+}
+
+/* All parent sections remain discoverable without a horizontal swipe. */
+.parents-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.parents-tab {
+  min-width: 0;
+}

@@ -1,4 +1,4 @@
-// Difficulty: «легко / средне / трудно» chosen by the child (stars on the forest screen) or in the
+// Difficulty: «легко / средне / трудно» chosen by the child (steps on the forest screen) or in the
 // parents' corner; harder further along the path; no arithmetic for 5–6-year-olds.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -6,17 +6,22 @@ import { hold, openPhone, saved, upTo } from "./helpers.mjs";
 
 test("the child picks the difficulty; it is saved and shown on the stop", async (t) => {
   const { page, errors } = await openPhone(t, { path: "/forest", progress: { intro: true } });
-  assert.equal(await page.locator(".diff-badge .diff-star.is-on").count(), 2, "«средне» first");
+  assert.equal(await page.locator(".diff-badge .diff-step.is-on").count(), 2, "«средне» first");
   await page.click(".diff-badge");
   await page.waitForSelector(".diff-sheet");
+  const card = await page.locator(".diff-card").boundingBox();
+  assert.ok(
+    card.y >= 0 && card.y + card.height <= page.viewportSize().height + 1,
+    "the entire difficulty card fits the screen",
+  );
   await page.waitForFunction(() => window.__voice.includes("diff-pick"));
   await page.click('.diff-option[data-difficulty="hard"]');
   await page.waitForSelector(".diff-sheet", { state: "detached" });
   assert.equal((await saved(page)).settings.difficulty, "hard");
-  assert.equal(await page.locator(".diff-badge .diff-star.is-on").count(), 3);
+  assert.equal(await page.locator(".diff-badge .diff-step.is-on").count(), 3);
   await page.click('.stop[data-stop="hedgehog"]');
   await page.waitForSelector(".diff-badge.is-quiet");
-  assert.equal(await page.locator(".diff-badge.is-quiet .diff-star.is-on").count(), 3);
+  assert.equal(await page.locator(".diff-badge.is-quiet .diff-step.is-on").count(), 3);
   assert.deepEqual(errors, []);
 });
 

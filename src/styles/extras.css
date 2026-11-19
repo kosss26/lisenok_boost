@@ -1,0 +1,481 @@
+/* the forest path: two pictures high (entrance below, deep forest above), scrolled vertically */
+.forest-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.forest-scroll::-webkit-scrollbar {
+  display: none;
+}
+.forest-tall {
+  position: relative;
+  left: 50%;
+  width: max(100cqw, calc(100cqh * 9 / 16));
+  height: calc(2 * max(100cqh, calc(100cqw * 16 / 9)));
+  transform: translateX(-50%);
+  /* the moving layers (fox, stars) are shifted with transforms: they must not make it scroll further */
+  overflow: hidden;
+}
+.forest-bg {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+}
+/* the deep forest overlaps the entrance a little and fades into it */
+.forest-bg-2 {
+  top: 0;
+  height: 54%;
+  z-index: 1;
+  -webkit-mask-image: linear-gradient(black 92.6%, transparent);
+  mask-image: linear-gradient(black 92.6%, transparent);
+}
+.forest-bg-1 {
+  top: 50%;
+}
+/* a soft band of mist hides where the two pictures meet */
+.forest-seam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 48%;
+  height: 7%;
+  z-index: 1;
+  background: linear-gradient(
+    rgba(200, 215, 160, 0),
+    rgba(200, 215, 160, 0.3) 50%,
+    rgba(200, 215, 160, 0)
+  );
+  pointer-events: none;
+}
+.forest-half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  pointer-events: none;
+}
+.forest-half-1 {
+  top: 50%;
+}
+.forest-half-2 {
+  top: 0;
+}
+
+.word-details {
+  margin-top: 12px;
+}
+.word-details summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+.word-details ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.word-details li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+.word-details li span {
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+.word-details li em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* ---------- stage 8: visible counting ---------- */
+/* after the right answer each object hops as the voice says its number */
+.count-item.is-counted .count-pic {
+  opacity: 1;
+}
+.count-item.is-counted {
+  transform: none;
+}
+.count-item.is-hop {
+  animation: count-hop 0.42s ease-out;
+  z-index: 2;
+}
+.count-item.is-hop::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgb(255 214 90 / 0.9);
+  animation: pop-in 0.25s ease-out;
+  pointer-events: none;
+}
+@keyframes count-hop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-22px) scale(1.12);
+  }
+  70% {
+    transform: translateY(0) scale(0.95, 1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* subtraction: the apples sit in a basket, then the ones taken away hop out one by one */
+.math-basket {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* the objects lie on the basket's body (the picture's lower half) */
+.math-basket .math-group {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 14%;
+  width: 92%;
+  transform: translateX(-50%);
+  background: transparent;
+  padding: 0;
+  align-content: flex-end;
+}
+.math-basket-img {
+  width: clamp(160px, 56cqw, 240px);
+  height: auto;
+  object-fit: contain;
+}
+.math-pic.is-leaving {
+  animation: leave-basket 0.7s cubic-bezier(0.3, 0.6, 0.4, 1) both;
+  animation-delay: calc(1.1s + var(--k, 0) * 0.6s);
+}
+@keyframes leave-basket {
+  0% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(30px, -90px) rotate(10deg);
+  }
+  100% {
+    transform: translate(70px, -70px) rotate(-8deg) scale(0.85);
+    opacity: 0.35;
+    filter: grayscale(1) drop-shadow(0 1px 1.5px rgb(90 60 30 / 0.5));
+  }
+}
+
+/* ---------- stage 8: the child's sky ---------- */
+.sky {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 30%, #fff8 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 34% 72%, #fff7 50%, transparent 51%),
+    radial-gradient(1px 1px at 58% 22%, #fff9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 76% 64%, #fff6 50%, transparent 51%),
+    radial-gradient(1px 1px at 90% 18%, #fff8 50%, transparent 51%),
+    linear-gradient(#0d1640, #24306e 70%, #3a3f86);
+}
+.sky-moon {
+  position: absolute;
+  right: 6%;
+  top: 8%;
+  width: 17%;
+  max-width: 54px;
+  filter: drop-shadow(0 0 12px rgb(255 240 190 / 0.8));
+}
+.sky-placed {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  filter: drop-shadow(0 0 6px rgb(255 214 90 / 0.95));
+  animation: twinkle 3s ease-in-out infinite;
+}
+.sky-placed:nth-child(3n) {
+  animation-delay: -1s;
+}
+.sky-placed:nth-child(3n + 1) {
+  animation-delay: -2s;
+}
+.sky-placed.is-new {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  animation:
+    pop-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4) both,
+    twinkle 3s ease-in-out infinite 0.6s;
+}
+@keyframes twinkle {
+  50% {
+    transform: scale(0.82);
+    opacity: 0.8;
+  }
+}
+.place-star {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 360px);
+}
+.sky-frame {
+  position: relative;
+  width: 100%;
+  height: clamp(130px, 24cqh, 190px);
+  border-radius: 24px;
+  border: 3px solid rgb(255 255 255 / 0.25);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+}
+.place-star.is-waiting .sky-frame {
+  border-color: rgb(255 214 90 / 0.8);
+  animation: sky-call 1.6s ease-in-out infinite;
+}
+.sky-frame.is-near {
+  border-color: #ffd65a;
+  box-shadow:
+    0 0 0 4px rgb(255 214 90 / 0.5),
+    0 8px 24px rgb(0 0 0 / 0.35);
+}
+@keyframes sky-call {
+  50% {
+    box-shadow:
+      0 0 0 6px rgb(255 214 90 / 0.25),
+      0 8px 24px rgb(0 0 0 / 0.35);
+  }
+}
+.sky-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffe9a8;
+  pointer-events: none;
+}
+.new-star {
+  margin-top: 8px;
+  touch-action: none;
+}
+.new-star .reward-star {
+  width: 130px;
+}
+.place-star.is-waiting + h2 {
+  margin-top: 0;
+}
+.gift {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---------- stage 8: album gifts ---------- */
+.album-slot.is-wrapped .album-pic {
+  opacity: 0;
+}
+.gift-box {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 64%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.gift-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: wiggle 2.4s ease-in-out infinite;
+}
+@keyframes wiggle {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  78% {
+    transform: rotate(-8deg);
+  }
+  86% {
+    transform: rotate(7deg);
+  }
+  94% {
+    transform: rotate(-3deg);
+  }
+}
+.album-slot.is-opening .gift-box img {
+  animation: box-open 0.5s ease-in both;
+}
+@keyframes box-open {
+  40% {
+    transform: scale(1.15, 0.9);
+  }
+  100% {
+    transform: translateY(-30px) scale(1.4);
+    opacity: 0;
+  }
+}
+.album-slot.is-opening .album-pic {
+  animation: gift-out 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4) both 0.25s;
+}
+@keyframes gift-out {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.album-slot.is-spin .album-pic {
+  animation: gift-spin 0.9s cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+@keyframes gift-spin {
+  0% {
+    transform: rotateY(0) scale(1);
+  }
+  50% {
+    transform: rotateY(200deg) scale(1.25);
+  }
+  100% {
+    transform: rotateY(360deg) scale(1);
+  }
+}
+.album-sky {
+  position: relative;
+  height: 150px;
+  margin: 8px 0 18px;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- stage 8: time of day and weather ---------- */
+.forest-light {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.forest-rain,
+.forest-mist {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.forest-rain {
+  -webkit-mask-image: linear-gradient(transparent, black 25%, black 75%, transparent);
+  mask-image: linear-gradient(transparent, black 25%, black 75%, transparent);
+}
+.rain {
+  overflow: hidden;
+  pointer-events: none;
+}
+.stop-weather .rain,
+.stop-weather .mist,
+.tod-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.drop {
+  position: absolute;
+  top: -12%;
+  width: 2px;
+  height: 9%;
+  border-radius: 2px;
+  background: linear-gradient(rgb(220 235 255 / 0), rgb(220 235 255 / 0.75));
+  transform: rotate(12deg);
+  animation: rain-fall 0.8s linear infinite;
+}
+@keyframes rain-fall {
+  to {
+    transform: translate(-14vh, 120vh) rotate(12deg);
+  }
+}
+.forest-rain .drop {
+  height: 4%;
+}
+@keyframes rain-fall-band {
+  to {
+    transform: translate(-30px, 900%) rotate(12deg);
+  }
+}
+.forest-rain .drop {
+  animation-name: rain-fall-band;
+}
+.mist {
+  overflow: hidden;
+}
+.mist span {
+  position: absolute;
+  left: -40%;
+  width: 180%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(235 240 245 / 0.55), rgb(235 240 245 / 0));
+  animation: mist-drift 22s ease-in-out infinite alternate;
+}
+.mist-a {
+  top: 20%;
+}
+.mist-b {
+  top: 50%;
+  animation-duration: 30s !important;
+  animation-direction: alternate-reverse !important;
+}
+@keyframes mist-drift {
+  to {
+    transform: translateX(18%);
+  }
+}
+.stop-weather .mist span {
+  top: auto;
+  bottom: 0;
+  height: 40%;
+}
+.stop-weather .mist-b {
+  bottom: 18%;
+}
+.tod-morning .tod-tint {
+  background: linear-gradient(rgb(255 196 150 / 0.28), rgb(255 230 190 / 0.05) 60%);
+}
+.tod-evening .tod-tint {
+  background: linear-gradient(rgb(255 120 40 / 0.3), rgb(255 170 90 / 0.12) 70%);
+}
+.tod-dusk .tod-tint {
+  background: linear-gradient(rgb(30 26 100 / 0.55), rgb(70 50 130 / 0.3) 70%);
+}
+.wx-rain .tod-tint {
+  background: linear-gradient(rgb(90 110 140 / 0.35), rgb(120 140 160 / 0.15));
+}
+@media (prefers-reduced-motion: reduce) {
+  .rain .drop {
+    display: none;
+  }
+  .rain {
+    background: repeating-linear-gradient(
+      102deg,
+      transparent 0 22px,
+      rgb(220 235 255 / 0.18) 22px 23px
+    );
+  }
+}

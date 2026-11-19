@@ -6,6 +6,7 @@
 import { useSyncExternalStore } from "react";
 import { FOREST, type Skill } from "../content/forest.ts";
 import type { Level, Tune } from "./tasks.ts";
+import { freshProgress, parseSave, SAVE_VERSION, type Profile } from "./save.ts";
 
 /** «легко / средне / трудно» on top of the age level (parents' corner or the child's own picker) */
 export type Difficulty = "easy" | "medium" | "hard";
@@ -18,7 +19,17 @@ export const DIFFICULTY_NAMES: Record<Difficulty, string> = {
 
 export const STORAGE_KEY = "lisenok:progress";
 
-export type SkillStat = { tasks: number; firstTry: number; mistakes: number; hints: number };
+export type SkillStat = {
+  tasks: number;
+  firstTry: number;
+  mistakes: number;
+  hints: number;
+  /** Only new answers have reliable independent/assisted/retried classification. */
+  measured?: number;
+  independent?: number;
+  assisted?: number;
+  retried?: number;
+};
 /** per word: tasks seen, mistakes, hints, and the current run of clean answers */
 export type WordStat = { seen: number; miss: number; hints: number; streak: number };
 export type Settings = {
@@ -27,12 +38,14 @@ export type Settings = {
   /** adapt the difficulty to how the child is doing (never changes the age level) */
   auto: boolean;
   difficulty: Difficulty;
+  autoHints: boolean;
   /** minutes per day, 0 = no limit */
   limit: number;
   volume: { voice: number; sounds: number; music: number; forest: number };
 };
 export type Progress = {
   intro: boolean;
+  setupDone: boolean;
   /** stop id -> how many times solved */
   done: Record<string, number>;
   gifts: string[];
@@ -57,83 +70,131 @@ export type Progress = {
   sky: Record<string, [number, number]>;
 };
 
-const DEFAULT: Progress = {
-  intro: false,
-  done: {},
-  gifts: [],
-  recent: [],
-  adapt: 0,
-  skills: {},
-  words: {},
-  settings: {
-    name: null,
-    level: 1,
-    auto: true,
-    difficulty: "medium",
-    limit: 0,
-    volume: { voice: 1, sounds: 0.8, music: 0.5, forest: 0.6 },
-  },
-  playLog: {},
-  extra: {},
-  forestCelebrated: false,
-  finds: {},
-  opened: [],
-  sky: {},
-};
-
+const DEFAULT = freshProgress();
 export const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 };
-
+const listeners = new Set<() => void>();
+let saveWarning = "";
+let profiles: Record<string, Profile> = {};
+let activeProfile = "child-1";
 function load(): Progress {
-  if (typeof localStorage === "undefined") return DEFAULT;
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
-    return {
-      ...DEFAULT,
-      ...saved,
-      settings: {
-        ...DEFAULT.settings,
-        ...saved.settings,
-        volume: { ...DEFAULT.settings.volume, ...saved.settings?.volume },
-      },
-    };
+    if (typeof localStorage === "undefined") return freshProgress();
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return freshProgress();
+    const parsed = parseSave(raw);
+    profiles = parsed.profiles;
+    activeProfile = parsed.activeProfile;
+    return profiles[activeProfile].progress;
   } catch {
-    return DEFAULT;
+    saveWarning =
+      "Сохранение не удалось прочитать. Данные в браузере не перезаписаны. Можно загрузить резервную копию.";
+    return freshProgress();
   }
 }
-
 let state: Progress = load();
-const listeners = new Set<() => void>();
-
+if (!Object.keys(profiles).length)
+  profiles[activeProfile] = { label: "Ребёнок 1", progress: state };
+let damagedSave = Boolean(saveWarning);
+const emit = () => listeners.forEach((l) => l());
+const subscribe = (l: () => void) => {
+  listeners.add(l);
+  return () => {
+    listeners.delete(l);
+  };
+};
 export function getProgress() {
   return state;
 }
+export function getActiveProfile() {
+  return activeProfile;
+}
+export function getProfiles() {
+  return Object.entries(profiles).map(([id, p]) => ({ id, label: p.label }));
+}
+export function useSaveWarning() {
+  return useSyncExternalStore(
+    subscribe,
+    () => saveWarning,
+    () => "",
+  );
+}
+function snapshot() {
+  return {
+    ...state,
+    schemaVersion: SAVE_VERSION,
+    activeProfile,
+    profiles: { ...profiles, [activeProfile]: { ...profiles[activeProfile], progress: state } },
+  };
+}
+function persist() {
+  try {
+    // Preserve the unreadable original before writing the first repaired save.
+    if (damagedSave) {
+      const old = localStorage.getItem(STORAGE_KEY);
+      if (old) localStorage.setItem(`${STORAGE_KEY}:recovery`, old);
+      damagedSave = false;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot()));
+    saveWarning = "";
+  } catch {
+    saveWarning =
+      "Прогресс сейчас хранится только в памяти. Разрешите сохранение в браузере или скачайте резервную копию до закрытия игры.";
+  }
+}
 export function update(fn: (p: Progress) => Progress) {
   state = fn(state);
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    /* private mode: keep in memory */
-  }
-  listeners.forEach((l) => l());
+  profiles[activeProfile] = { ...profiles[activeProfile], progress: state };
+  persist();
+  emit();
 }
 export function useProgress() {
   return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
+    subscribe,
     () => state,
     () => DEFAULT,
   );
+}
+export function exportSave() {
+  return JSON.stringify(snapshot(), null, 2);
+}
+export function importSave(raw: string) {
+  const parsed = parseSave(raw); // validate everything before changing the current game
+  profiles = parsed.profiles;
+  activeProfile = parsed.activeProfile;
+  state = profiles[activeProfile].progress;
+  persist();
+  emit();
+}
+export function switchProfile(id: string) {
+  if (!Object.hasOwn(profiles, id)) throw new Error("Профиль не найден");
+  activeProfile = id;
+  state = profiles[id].progress;
+  persist();
+  emit();
+}
+export function addProfile(label: string) {
+  if (Object.keys(profiles).length >= 6) throw new Error("Можно создать до 6 профилей");
+  const name = label.trim().slice(0, 40);
+  if (!name) throw new Error("Введите название профиля");
+  const id = `child-${crypto.randomUUID()}`;
+  profiles[id] = { label: name, progress: freshProgress() };
+  switchProfile(id);
+}
+export function renameProfile(label: string) {
+  const name = label.trim().slice(0, 40);
+  if (!name) throw new Error("Введите название профиля");
+  profiles[activeProfile] = { ...profiles[activeProfile], label: name };
+  persist();
+  emit();
 }
 export const setSettings = (patch: Partial<Settings>) =>
   update((p) => ({ ...p, settings: { ...p.settings, ...patch } }));
 
 export function resetProgress() {
-  update((p) => ({ ...DEFAULT, settings: p.settings, intro: true }));
+  update((p) => ({ ...freshProgress(), settings: p.settings, setupDone: true, intro: true }));
 }
 
 // ---------- the forest path ----------
@@ -159,7 +220,11 @@ export function recordTask(skill: Skill, mistakes: number, hinted: boolean, word
         ...p.skills,
         [skill]: {
           tasks: s.tasks + 1,
-          firstTry: s.firstTry + (mistakes === 0 ? 1 : 0),
+          firstTry: s.firstTry + (mistakes === 0 && !hinted ? 1 : 0),
+          measured: (s.measured ?? 0) + 1,
+          independent: (s.independent ?? 0) + (mistakes === 0 && !hinted ? 1 : 0),
+          assisted: (s.assisted ?? 0) + (hinted ? 1 : 0),
+          retried: (s.retried ?? 0) + (mistakes > 0 && !hinted ? 1 : 0),
           mistakes: s.mistakes + mistakes,
           hints: s.hints + (hinted ? 1 : 0),
         },
@@ -245,7 +310,11 @@ export function weakWordIds(p: Progress): Set<string> {
 /** Skills that need practice: at least 3 tasks and fewer than 60% right on the first try. */
 export function weakSkills(p: Progress): Skill[] {
   return (Object.entries(p.skills) as [Skill, SkillStat][])
-    .filter(([, s]) => s.tasks >= 3 && s.firstTry / s.tasks < 0.6)
+    .filter(([, s]) =>
+      s.measured !== undefined
+        ? s.measured >= 3 && (s.independent ?? 0) / s.measured < 0.6
+        : s.tasks >= 3 && s.firstTry / s.tasks < 0.6,
+    )
     .map(([k]) => k);
 }
 

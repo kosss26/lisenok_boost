@@ -15,13 +15,17 @@ import {
   useProgress,
   weakSkills,
   weakWordIds,
+  useSaveWarning,
 } from "../game/progress";
 import type { Level } from "../game/tasks";
 import { HoldButton } from "./kit";
 import { IconClose } from "./icons";
 import { closeParents } from "./parents-state";
 
-const TABS = ["Ребёнок", "Успехи", "Время", "Звук"] as const;
+import { useModal } from "../game/modal";
+import { SaveTools } from "./save-tools";
+
+const TABS = ["Ребёнок", "Успехи", "Время", "Звук", "Данные", "Об игре"] as const;
 type Tab = (typeof TABS)[number];
 const LIMITS = [0, 10, 15, 20, 30];
 
@@ -41,6 +45,8 @@ function useOfflineStatus() {
 
 export function Parents() {
   const p = useProgress();
+  const ref = useModal(closeParents);
+  const warning = useSaveWarning();
   const s = p.settings;
   const [tab, setTab] = useState<Tab>("Ребёнок");
   const offline = useOfflineStatus();
@@ -48,7 +54,14 @@ export function Parents() {
   const weak = weakSkills(p);
 
   return (
-    <div className="parents" role="dialog" aria-label="Для взрослых">
+    <div
+      ref={ref}
+      tabIndex={-1}
+      className="parents"
+      aria-modal="true"
+      role="dialog"
+      aria-label="Для взрослых"
+    >
       <div className="parents-head">
         <h2>Для взрослых</h2>
         <button type="button" className="parents-close" aria-label="Закрыть" onClick={closeParents}>
@@ -62,6 +75,27 @@ export function Parents() {
             type="button"
             role="tab"
             aria-selected={tab === t}
+            id={`parent-tab-${TABS.indexOf(t)}`}
+            aria-controls="parent-panel"
+            tabIndex={tab === t ? 0 : -1}
+            onKeyDown={(e) => {
+              const i = TABS.indexOf(t);
+              const next =
+                e.key === "ArrowRight"
+                  ? (i + 1) % TABS.length
+                  : e.key === "ArrowLeft"
+                    ? (i + TABS.length - 1) % TABS.length
+                    : e.key === "Home"
+                      ? 0
+                      : e.key === "End"
+                        ? TABS.length - 1
+                        : -1;
+              if (next >= 0) {
+                e.preventDefault();
+                setTab(TABS[next]);
+                document.getElementById(`parent-tab-${next}`)?.focus();
+              }
+            }}
             className={`parents-tab ${tab === t ? "is-active" : ""}`}
             onClick={() => setTab(t)}
           >
@@ -70,7 +104,14 @@ export function Parents() {
         ))}
       </div>
 
-      <div className="parents-body">
+      <div
+        className="parents-body"
+        id="parent-panel"
+        role="tabpanel"
+        aria-labelledby={`parent-tab-${TABS.indexOf(tab)}`}
+      >
+        {tab === "Данные" && <SaveTools />}
+        {tab === "Об игре" && <Credits />}
         {tab === "Ребёнок" && (
           <>
             <label className="field">
@@ -122,10 +163,24 @@ export function Parents() {
                 ))}
               </div>
               <small className="field-note">
-                Ребёнок тоже может выбрать её сам — звёздочки вверху экрана леса. Задания
+                Ребёнок тоже может выбрать её сам — ступеньки вверху экрана леса. Задания
                 усложняются постепенно от первой остановки к последней.
               </small>
             </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={s.autoHints}
+                onChange={(e) => setSettings({ autoHints: e.target.checked })}
+              />
+              <span>
+                Помогать, если ребёнок задумался
+                <small>
+                  Лисёнок подождёт окончания вопроса и даст время подумать. Можно отключить: кнопка
+                  подсказки останется доступной.
+                </small>
+              </span>
+            </label>
             <label className="switch">
               <input
                 type="checkbox"
@@ -161,14 +216,31 @@ export function Parents() {
                 <span>уровень</span>
               </div>
             </div>
-            <h3>Навыки (с первой попытки)</h3>
+            <h3>Самостоятельные ответы</h3>
+            <p className="field-note">
+              Без ошибок и подсказок. Старые ответы не входят в новый процент: раньше помощь
+              учитывалась иначе.
+            </p>
             <ul className="skills">
               {(Object.keys(SKILL_NAMES) as Skill[]).map((k) => {
                 const st = p.skills[k];
-                const pct = st && st.tasks ? Math.round((st.firstTry / st.tasks) * 100) : null;
+                const pct = st?.measured
+                  ? Math.round(((st.independent ?? 0) / st.measured) * 100)
+                  : null;
                 return (
                   <li key={k} className={weak.includes(k) ? "is-weak" : ""}>
-                    <span className="skill-name">{SKILL_NAMES[k]}</span>
+                    <span className="skill-name">
+                      {SKILL_NAMES[k]}
+                      {st && (
+                        <small className="skill-detail">
+                          {st.measured ?? 0} новых заданий · с помощью: {st.assisted ?? 0} · после
+                          ошибок: {st.retried ?? 0}
+                          {st.tasks > (st.measured ?? 0)
+                            ? ` · ранее: ${st.tasks - (st.measured ?? 0)}`
+                            : ""}
+                        </small>
+                      )}
+                    </span>
                     <span className="skill-bar">
                       <i style={{ width: `${pct ?? 0}%` }} />
                     </span>
@@ -240,6 +312,11 @@ export function Parents() {
       </div>
 
       <div className="parents-foot">
+        {warning && (
+          <p className="save-warning" role="alert">
+            {warning}
+          </p>
+        )}
         <p className="offline-note">
           {offline
             ? offline.have >= offline.total
@@ -252,7 +329,7 @@ export function Parents() {
           className="reset-btn"
           onDone={resetProgress}
         >
-          <span>Сбросить прогресс (удерживать)</span>
+          <span>Сбросить этот профиль (удерживать)</span>
         </HoldButton>
       </div>
     </div>
@@ -293,5 +370,56 @@ function WordDetails() {
         </p>
       )}
     </details>
+  );
+}
+
+function Credits() {
+  return (
+    <section className="credits">
+      <h3>Лисёнок и звёзды</h3>
+      <p>
+        Игра для чтения и счёта. Задания помогают практиковаться; статистика не является
+        диагностикой навыков.
+      </p>
+      <h3>Музыка</h3>
+      <p>
+        Kevin MacLeod (incompetech.com): Carefree, Easy Lemon, Fluffing a Duck. Фрагменты обрезаны,
+        громкость выровнена.
+      </p>
+      <p>
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+          Лицензия CC BY 4.0
+        </a>{" "}
+        ·{" "}
+        <a href="https://incompetech.com/" target="_blank" rel="noreferrer">
+          Автор музыки
+        </a>
+      </p>
+      <h3>Звуки леса</h3>
+      <p>
+        Thimras — Park ambiences; isaiah658 — Ambient Bird Sounds. Записи CC0, фрагменты сведены в
+        петлю.
+      </p>
+      <p>
+        <a href="https://opengameart.org/content/park-ambiences" target="_blank" rel="noreferrer">
+          Park ambiences
+        </a>{" "}
+        ·{" "}
+        <a
+          href="https://opengameart.org/content/ambient-bird-sounds"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Ambient Bird Sounds
+        </a>
+      </p>
+      <h3>Голос и иллюстрации</h3>
+      <p>
+        Голос: Silero TTS v5 (xenia, aidar, baya, kseniya, eugene), CC BY-NC 4.0. Эта версия озвучки
+        предназначена для некоммерческого использования. Иллюстрации сгенерированы для проекта.
+        Звуковые эффекты созданы программно.
+      </p>
+      <p>Профили и успехи хранятся в браузере. Обязательной регистрации нет.</p>
+    </section>
   );
 }

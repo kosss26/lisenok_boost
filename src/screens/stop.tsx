@@ -1,3 +1,4 @@
+import { Modal } from "../components/modal";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST, timeOf, weatherOf, type Stop } from "../content/forest";
@@ -94,6 +95,14 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
   /** the star hangs in the sky (or was there already): now the gift and the thanks */
   const [starUp, setStarUp] = useState(false);
 
+  const leaveReward = () => {
+    void sfx("tap");
+    stopVoice();
+    if (!getProgress().sky[stop.id])
+      placeStar(stop.id, ...freeSkySpot(getProgress(), stopIndex + 1));
+    void navigate({ to: "/forest" });
+  };
+
   return (
     <Scene
       bg="bg-clearing"
@@ -138,7 +147,7 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
       )}
 
       {phase === "reward" && reward && (
-        <div className="reward" role="dialog" aria-label="Награда">
+        <Modal className="reward" label="Награда" onClose={leaveReward}>
           <div className="reward-rays" aria-hidden />
           {reward.toPlace ? (
             <PlaceStar
@@ -167,21 +176,10 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
               <Outro stop={stop} />
             </>
           )}
-          <button
-            type="button"
-            className="big-btn next-btn"
-            onClick={() => {
-              void sfx("tap");
-              stopVoice();
-              // a star the child did not hang up yet gets a free spot in the sky
-              if (!getProgress().sky[stop.id])
-                placeStar(stop.id, ...freeSkySpot(getProgress(), stopIndex + 1));
-              void navigate({ to: "/forest" });
-            }}
-          >
+          <button type="button" className="big-btn next-btn" onClick={leaveReward}>
             Дальше
           </button>
-        </div>
+        </Modal>
       )}
     </Scene>
   );

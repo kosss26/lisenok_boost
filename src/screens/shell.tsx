@@ -9,12 +9,20 @@ import {
   unlockAudio,
   warmSfx,
 } from "../game/audio";
-import { addPlayTime, addTenMinutes, timeIsUp, useProgress } from "../game/progress";
+import {
+  addPlayTime,
+  addTenMinutes,
+  timeIsUp,
+  useProgress,
+  getActiveProfile,
+} from "../game/progress";
 import { Parents } from "../components/parents";
 import { useParentsOpen } from "../components/parents-state";
-import { Fox, HoldButton } from "../components/kit";
+import { Fox, HoldButton, ParentsButton } from "../components/kit";
 
 /** Root layout: sound unlock on the first tap, pause in the background, play time and rest screen. */
+import { useModal } from "../game/modal";
+
 export function Shell() {
   const p = useProgress();
   const parentsOpen = useParentsOpen();
@@ -25,27 +33,31 @@ export function Shell() {
 
   useEffect(() => {
     const first = () => {
+      window.removeEventListener("pointerdown", first);
+      window.removeEventListener("keydown", first);
       unlockAudio();
       warmSfx();
       if (window.location.pathname !== "/") startMusic();
     };
     window.addEventListener("pointerdown", first, { once: true });
+    window.addEventListener("keydown", first, { once: true });
     const vis = () => (document.hidden ? pauseAudio() : resumeAudio());
     document.addEventListener("visibilitychange", vis);
     return () => {
       window.removeEventListener("pointerdown", first);
+      window.removeEventListener("keydown", first);
       document.removeEventListener("visibilitychange", vis);
     };
   }, []);
 
   // count play time (not on the title screen and not while resting)
   useEffect(() => {
-    if (path === "/" || resting) return;
+    if (path === "/" || resting || parentsOpen) return;
     const id = window.setInterval(() => {
       if (!document.hidden) addPlayTime(5);
     }, 5000);
     return () => window.clearInterval(id);
-  }, [path, resting]);
+  }, [path, resting, parentsOpen]);
 
   useEffect(() => {
     if (resting) void say(["rest"]);
@@ -53,24 +65,35 @@ export function Shell() {
 
   return (
     <div className="app">
-      <Outlet />
-      {resting && (
-        <div className="rest" role="dialog" aria-label="Пора отдохнуть">
-          <div className="rest-moon" />
-          <Fox pose="read" className="rest-fox" />
-          <h2>Лисёнок отдыхает</h2>
-          <p>На сегодня игра закончилась. Поиграем завтра!</p>
-          <HoldButton
-            label="Ещё 10 минут (для взрослых)"
-            className="rest-more"
-            onDone={addTenMinutes}
-          >
-            <span>+10 минут</span>
-            <small>для взрослых: удерживайте</small>
-          </HoldButton>
-        </div>
-      )}
+      <div className="game-root" key={getActiveProfile()}>
+        <Outlet />
+      </div>
+      {resting && <RestScreen />}
       {parentsOpen && <Parents />}
+    </div>
+  );
+}
+
+function RestScreen() {
+  const ref = useModal();
+  return (
+    <div
+      ref={ref}
+      tabIndex={-1}
+      className="rest"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Пора отдохнуть"
+    >
+      <ParentsButton />
+      <div className="rest-moon" />
+      <Fox pose="read" className="rest-fox" />
+      <h2>Лисёнок отдыхает</h2>
+      <p>На сегодня игра закончилась. Поиграем завтра!</p>
+      <HoldButton label="Ещё 10 минут (для взрослых)" className="rest-more" onDone={addTenMinutes}>
+        <span>+10 минут</span>
+        <small>для взрослых: удерживайте</small>
+      </HoldButton>
     </div>
   );
 }

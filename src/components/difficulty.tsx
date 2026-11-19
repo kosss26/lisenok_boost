@@ -1,8 +1,9 @@
 /**
- * «Легко / средне / трудно»: a small badge shows the current choice (stars), and the child can
+ * «Легко / средне / трудно»: a small badge shows the current choice (steps), and the child can
  * change it in a simple picker with three big buttons. The parents' corner has the same setting.
  */
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { say, sfx } from "../game/audio";
 import {
   DIFFICULTIES,
@@ -11,15 +12,15 @@ import {
   useProgress,
   type Difficulty,
 } from "../game/progress";
-import { Pic } from "./kit";
+import { useModal } from "../game/modal";
 
-const STARS: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3 };
+const STEPS: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3 };
 
-function Stars({ n, className = "" }: { n: number; className?: string }) {
+function Steps({ n, className = "" }: { n: number; className?: string }) {
   return (
-    <span className={`diff-stars ${className}`} aria-hidden>
+    <span className={`diff-steps ${className}`} aria-hidden>
       {Array.from({ length: 3 }, (_, i) => (
-        <Pic key={i} name="star" className={`diff-star ${i < n ? "is-on" : ""}`} alt="" />
+        <span key={i} className={`diff-step ${i < n ? "is-on" : ""}`} />
       ))}
     </span>
   );
@@ -43,23 +44,44 @@ export function DifficultyBadge({ pick = false }: { pick?: boolean }) {
             void say(["diff-pick"]);
           }}
         >
-          <Stars n={STARS[d]} />
+          <Steps n={STEPS[d]} />
         </button>
       ) : (
         <span className={`diff-badge diff-${d} is-quiet`} aria-label={label} role="img">
-          <Stars n={STARS[d]} />
+          <Steps n={STEPS[d]} />
         </span>
       )}
-      {open && <DifficultyPicker onClose={() => setOpen(false)} />}
+      {open &&
+        createPortal(
+          <DifficultyPicker onClose={() => setOpen(false)} />,
+          document.querySelector(".app") ?? document.body,
+        )}
     </>
   );
 }
 
 export function DifficultyPicker({ onClose }: { onClose: () => void }) {
   const d = useProgress().settings.difficulty;
+  const ref = useModal(onClose);
   return (
-    <div className="diff-sheet" role="dialog" aria-label="Как будем играть?" onClick={onClose}>
+    <div
+      ref={ref}
+      tabIndex={-1}
+      className="diff-sheet"
+      aria-modal="true"
+      role="dialog"
+      aria-label="Как будем играть?"
+      onClick={onClose}
+    >
       <div className="diff-card" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className="dialog-close"
+          aria-label="Закрыть выбор сложности"
+          onClick={onClose}
+        >
+          ×
+        </button>
         <h2>Как будем играть?</h2>
         <div className="diff-options">
           {DIFFICULTIES.map((k) => (
@@ -75,7 +97,7 @@ export function DifficultyPicker({ onClose }: { onClose: () => void }) {
                 window.setTimeout(onClose, 350);
               }}
             >
-              <Stars n={STARS[k]} className="is-big" />
+              <Steps n={STEPS[k]} className="is-big" />
               <span>{DIFFICULTY_NAMES[k]}</span>
             </button>
           ))}

@@ -217,7 +217,7 @@ function letters(t: Tune, rand: Rand): Task[] {
         word: w.id,
         skill: "letters",
         prompt: ["q-letter-first", wordKey(w.id)],
-        hint: ["h-letter-first", wordKey(w.id)],
+        hint: ["q-letter-first", wordKey(w.id)],
         visual: { type: "picture", pic: w.pic },
         layout: "letters",
         options: opts.map((x) => ({ id: x, label: x, say: letterKey(x) })),

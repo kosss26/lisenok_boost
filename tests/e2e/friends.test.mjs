@@ -39,10 +39,12 @@ test("tapping the hedgehog makes it curl up and giggle; the fox giggles too", as
 test("hesitation: the fox glances, then points; wrong options fade, the target glows", async (t) => {
   const { page, errors } = await hedgehogTask(t, (context) => context.clock.install());
   assert.equal(await page.locator('.friend-fox-btn[data-guide="0"]').count(), 1);
-  await page.clock.fastForward(9500);
+  await page.waitForFunction(() => window.__voice.includes("q-letter-find"));
+  await page.waitForFunction(() => !window.__speaking());
+  await page.clock.runFor(30_000);
   await page.waitForSelector('.friend-fox-btn[data-guide="1"]');
   assert.equal(await page.locator(".option.is-faded").count(), 0);
-  await page.clock.fastForward(9000);
+  await page.clock.runFor(22_000);
   await page.waitForSelector('.friend-fox-btn[data-guide="2"]');
   assert.equal(await page.locator('.option[data-answer="1"].is-hint').count(), 1);
   assert.ok((await page.locator(".option.is-faded").count()) >= 1);
@@ -52,4 +54,19 @@ test("hesitation: the fox glances, then points; wrong options fade, the target g
   await page.locator('.option[data-answer="1"]').click();
   await page.waitForSelector('.friend-fox-btn[data-guide="0"]');
   assert.deepEqual(errors, []);
+});
+
+test("automatic pointing can be disabled while manual help stays available", async (t) => {
+  const { page } = await openPhone(t, {
+    path: "/forest/hedgehog",
+    progress: { intro: true, settings: { level: 1, autoHints: false } },
+    beforeGoto: (c) => c.clock.install(),
+  });
+  await page.click(".help-btn");
+  await page.waitForSelector(".task");
+  await page.clock.runFor(65_000);
+  assert.equal(await page.locator('.friend-fox-btn[data-guide="2"]').count(), 0);
+  assert.equal(await page.locator(".option.is-hint").count(), 0);
+  await page.click(".hint-btn");
+  await page.waitForSelector('.option[data-answer="1"].is-hint');
 });

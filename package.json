@@ -6,7 +6,7 @@
   "description": "Лисёнок и звёзды — приключение с чтением и счётом для детей 5–9 лет",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 8080",
-    "build": "node tools/asset-versions.mjs && python3 tools/encode-media.py && tsc --noEmit && vite build",
+    "build": "python3 tools/encode-media.py && node tools/asset-versions.mjs && tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 8081",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

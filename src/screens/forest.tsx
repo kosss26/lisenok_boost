@@ -1,3 +1,4 @@
+import { Modal } from "../components/modal";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST, onPath, timeOf, weatherOf, type TimeOfDay } from "../content/forest";
@@ -156,6 +157,7 @@ export function Forest() {
                 <span className="stop-num" aria-hidden>
                   {i + 1}
                 </span>
+                {isNext && <span className="stop-next-label">Сюда!</span>}
               </button>
             );
           })}
@@ -208,7 +210,11 @@ export function Forest() {
           </button>
         )}
         {celebrate && (
-          <div className="celebrate" role="dialog" aria-label="Лес пройден">
+          <Modal
+            className="celebrate"
+            label="Лес пройден"
+            onClose={() => update((s) => ({ ...s, forestCelebrated: true }))}
+          >
             {celebrateCard && (
               <div className="celebrate-card">
                 <Fox pose="cheer" className="celebrate-fox" />
@@ -227,7 +233,7 @@ export function Forest() {
                 </button>
               </div>
             )}
-          </div>
+          </Modal>
         )}
       </div>
     </div>

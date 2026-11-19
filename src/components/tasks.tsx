@@ -1,26 +1,16 @@
 /** The task views: multiple choice (letters, numbers, pictures, words, signs, groups) and word building. */
 import { useEffect, useRef, useState } from "react";
-import { NAMES } from "../content/names";
 import { numKey, shown, sylKey, voiceLines } from "../content/voice";
-import { AGAIN, PRAISE } from "../content/voice";
 import { say, sfx } from "../game/audio";
-import { getProgress } from "../game/progress";
 import { vibrate } from "../game/haptics";
 import { useDrag } from "../game/drag";
 import type { BuildTask, ChoiceTask, Option, Task, Visual } from "../game/tasks";
 import { Pic, SpeakerIcon } from "./kit";
 import { IconBulb } from "./icons";
 
+import { useAnswering } from "../game/answering";
+
 const LINES = voiceLines();
-const rnd = (n: number) => 1 + Math.floor(Math.random() * n);
-
-/** Praise line; now and then with the child's name. */
-function praise() {
-  const name = NAMES.find((n) => n.id === getProgress().settings.name);
-  if (name && Math.random() < 0.35) return `name-${name.id}-bravo`;
-  return `praise-${rnd(PRAISE)}`;
-}
-
 export type Solved = (mistakes: number, hinted: boolean) => void;
 export type Mood = "idle" | "happy" | "oops";
 /** the fox helps a hesitating child: 1 = glances toward the answer, 2 = points at it */
@@ -44,10 +34,6 @@ export function TaskView({
     <Build task={task} onSolved={onSolved} onMood={onMood} onGuide={onGuide} />
   );
 }
-
-/** seconds without an answer before the fox glances at the answer, then points at it */
-export const GLANCE_AFTER = 9000;
-export const POINT_AFTER = 18000;
 
 /** Tells the fox where the answer is while the guide stage is on (and nothing once it is off). */
 function useGuideTarget(
@@ -94,108 +80,6 @@ function PromptBar({
       </button>
     </div>
   );
-}
-
-/** longest wait for the praise clip before the next task comes anyway (ms) */
-const PRAISE_WAIT = 3500;
-
-/** Shared answer logic: mistakes, hint after the 2nd, show the answer after the 3rd. */
-function useAnswering(task: Task, onSolved: Solved, onMood: (m: Mood) => void) {
-  const [mistakes, setMistakes] = useState(0);
-  const [hinted, setHinted] = useState(false);
-  const [solved, setSolved] = useState(false);
-  const live = useRef(true);
-  const answered = useRef(false);
-  /** 0 → 1 (glance) → 2 (point) while the child waits; any answer starts the wait again */
-  const [wait, setWait] = useState<0 | 1 | 2>(0);
-  const [activity, setActivity] = useState(0);
-  useEffect(() => {
-    if (solved) return;
-    setWait(0);
-    const a = window.setTimeout(() => setWait(1), GLANCE_AFTER);
-    const b = window.setTimeout(() => {
-      setWait(2);
-      setHinted(true); // pointing at the answer is a hint, too (the word comes back later)
-    }, POINT_AFTER);
-    return () => {
-      window.clearTimeout(a);
-      window.clearTimeout(b);
-    };
-  }, [task, mistakes, activity, solved]);
-  useEffect(() => {
-    live.current = true;
-    // a quick child may answer before the question starts: then it is not read out over the praise
-    const t = window.setTimeout(() => answered.current || void say(task.prompt), 350);
-    return () => {
-      live.current = false;
-      window.clearTimeout(t);
-    };
-  }, [task]);
-
-  const hint = () => {
-    setHinted(true);
-    void say(task.hint);
-  };
-  const wrong = (spoken?: string) => {
-    void vibrate([18, 60, 18]);
-    const m = mistakes + 1;
-    setMistakes(m);
-    void sfx("wrong", 0.55);
-    onMood("oops");
-    window.setTimeout(() => live.current && onMood("idle"), 1200);
-    const before = spoken ? [spoken] : [];
-    if (m === 2) {
-      setHinted(true);
-      void say([...before, ...task.hint]);
-    } else if (m >= 3) void say([...before, "show-answer"]);
-    else void say([...before, `again-${rnd(AGAIN)}`]);
-  };
-  /** `before`: something to show first (counting along); the praise comes after it */
-  const right = (spoken: string[] = [], before?: () => Promise<unknown>) => {
-    answered.current = true;
-    void vibrate(30);
-    setSolved(true);
-    void sfx("right");
-    onMood("happy");
-    if (before) {
-      // never longer than ~1 s per object, even if a clip hangs
-      const cap = new Promise((r) => window.setTimeout(r, 12000));
-      void Promise.race([before(), cap]).then(() => live.current && praiseThenNext(spoken));
-    } else praiseThenNext(spoken);
-  };
-  const praiseThenNext = (spoken: string[]) => {
-    const started = Date.now();
-    // Move on when the praise has been said — but never wait for it longer than PRAISE_WAIT:
-    // on a slow network the clip may still be downloading, and the child must not be stuck.
-    let moved = false;
-    const next = () => {
-      if (moved) return;
-      moved = true;
-      const wait = Math.max(0, 1300 - (Date.now() - started));
-      window.setTimeout(() => {
-        if (!live.current) return;
-        onMood("idle");
-        onSolved(mistakes, hinted);
-      }, wait + 250);
-    };
-    void say([...spoken, praise()]).then(next);
-    window.setTimeout(next, PRAISE_WAIT);
-  };
-  const showHint = hinted || mistakes >= 2;
-  return {
-    mistakes,
-    hinted,
-    solved,
-    hint,
-    wrong,
-    right,
-    /** a step forward (a piece placed): the hesitation clock starts again */
-    poke: () => setActivity((n) => n + 1),
-    showHint,
-    reveal: mistakes >= 3,
-    /** what the fox does: 0 nothing, 1 glance, 2 point (and wrong options fade, the target glows) */
-    guide: (solved ? 0 : showHint || wait === 2 ? 2 : wait) as 0 | 1 | 2,
-  };
 }
 
 // ---------------- choice ----------------
@@ -254,7 +138,7 @@ function Choice({
 
   return (
     <div ref={rootRef} className={`task task-${task.skill} layout-${task.layout} guide-${a.guide}`}>
-      <PromptBar task={task} onRepeat={() => void say(task.prompt)} onHint={a.hint} />
+      <PromptBar task={task} onRepeat={a.repeat} onHint={a.hint} />
       <div
         ref={cardRef}
         className={`drop-card ${drag.near !== null ? "is-near" : ""} ${a.guide === 2 ? "is-target" : ""}`}
@@ -637,7 +521,7 @@ function Build({
       ref={rootRef}
       className={`task task-${task.skill} task-build unit-${task.unit} guide-${a.guide}`}
     >
-      <PromptBar task={task} onRepeat={() => void say(task.prompt)} onHint={a.hint} />
+      <PromptBar task={task} onRepeat={a.repeat} onHint={a.hint} />
       <div className="card card-build">
         <Pic name={task.pic} className="card-pic" />
         <div

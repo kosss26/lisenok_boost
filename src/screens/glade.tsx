@@ -1,3 +1,4 @@
+import { Modal } from "../components/modal";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST } from "../content/forest";
@@ -37,6 +38,7 @@ export function Glade() {
 }
 
 function GladeGame() {
+  const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("hello");
   const [round, setRound] = useState<Task[]>(newRound);
   const [step, setStep] = useState(0);
@@ -132,7 +134,11 @@ function GladeGame() {
       )}
 
       {phase === "find" && find && (
-        <div className="reward glade-find" role="dialog" aria-label="Находка">
+        <Modal
+          className="reward glade-find"
+          label="Находка"
+          onClose={() => void navigate({ to: "/forest" })}
+        >
           <div className="reward-rays" aria-hidden />
           <Pic name={find.pic} className="find-pic" />
           <h2>Находка: {find.name.toLowerCase()}!</h2>
@@ -145,7 +151,7 @@ function GladeGame() {
               Ещё!
             </button>
           </div>
-        </div>
+        </Modal>
       )}
     </Scene>
   );

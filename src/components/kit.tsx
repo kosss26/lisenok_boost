@@ -44,19 +44,40 @@ export function HoldButton({
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = null;
   };
+  const start = () => {
+    if (timer.current !== null) return;
+    setHolding(true);
+    timer.current = window.setTimeout(() => {
+      stop();
+      onDone();
+    }, 2500);
+  };
   useEffect(() => stop, []);
   return (
     <button
       type="button"
       aria-label={label}
       className={`hold ${holding ? "is-holding" : ""} ${className}`}
-      onPointerDown={(e) => {
-        e.preventDefault();
-        setHolding(true);
-        timer.current = window.setTimeout(() => {
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && !e.repeat) {
+          e.preventDefault();
+          start();
+        }
+        if (e.key === "Escape") stop();
+      }}
+      onKeyUp={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
           stop();
-          onDone();
-        }, 2500);
+        }
+      }}
+      onBlur={stop}
+      onPointerDown={(e) => {
+        if (e.button === 0) {
+          e.preventDefault();
+          e.currentTarget.focus();
+          start();
+        }
       }}
       onPointerUp={stop}
       onPointerLeave={stop}
