@@ -22,8 +22,17 @@ AVIF versions are created by the normal build; they are not checked in.
 - Idle characters breathe slightly. Tapping and correct answers get brief distinct reactions.
 - `PoseSprite` decodes a replacement image before a 240 ms crossfade; images share a fixed
   foot anchor. It preserves the current pose if a new image fails to load.
-- These are still-image pose transitions and CSS body motion, not skeletal animation or new
-  walk/blink sprite sheets. A future layered character pass can animate eyes, ears and tail.
+- `fox-wave-motion.webp` is a native four-frame idle animation (blink, ears, tail);
+  `fox-walk-motion.webp` is a native four-phase walking cycle. Their registered posters share
+  the same 320×384 canvas and foot baseline. Original generated 2×2 PNG sheets are archived
+  in `assets/sheets/fox-idle-source.png` and `fox-walk-source.png`.
+- Rebuild with `python3 tools/pack-fox-motion.py` (Pillow only). This splits and registers
+  existing generated artwork; it does not paint or synthesize new poses. The build runs
+  `check-fox-motion.py` to validate frame counts, alpha, dimensions and foot baseline.
+- `useMotionAllowed` watches reduced-motion preference, page visibility and inert ancestors.
+  Native animated images switch to registered posters when inactive; CSS animation pause
+  alone does not stop a WebP animation. Static poster images can use AVIF; animation always
+  uses its WebP bytes. The service worker caches both native animations in every format mode.
 - Screens and questions enter gently; draggable pieces retain their existing magnetic snapping.
 - Parent overlays, inert gameplay and hidden tabs pause decorative animation. System reduced
   motion disables animation/transitions and hides rain and ambient particles.
@@ -34,3 +43,11 @@ AVIF versions are created by the normal build; they are not checked in.
 `tests/e2e/visual.test.mjs` covers the next-stop action, geometry at 320×568, 390×664 and 768×1024,
 pose loading and reduced motion. Also review the seam, dialogue, long tasks and rewards visually.
 Testing on physical devices is still needed before making frame-rate or battery claims.
+
+## World map and dialogue
+
+The world map now uses the same soft gouache palette as the forest. Its label positions are
+measured from the painted regions. Pale paper labels mark future worlds; the forest is teal.
+Future-world messages can be dismissed and return focus to their source button.
+Dialogue portraits use fixed half-width columns, bottom alignment and decode-before-fade
+pose transitions; speaker emphasis changes colour rather than resizing the character.

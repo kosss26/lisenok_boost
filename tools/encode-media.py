@@ -43,7 +43,7 @@ for folder in ["art", "voice", "sfx", "music"]:
     for name in sorted(os.listdir(f"public/{folder}")):
         stem, ext = os.path.splitext(name)
         src = f"public/{folder}/{name}"
-        if folder == "art" and ext == ".webp":
+        if folder == "art" and ext == ".webp" and not stem.endswith("-motion"):
             dst = f"{CACHE}/art/{stem}.avif"
             keep.add(os.path.basename(dst))
             if stale(src, dst): jobs_img.append((src, dst))

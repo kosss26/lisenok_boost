@@ -1,4 +1,5 @@
 import { Modal } from "../components/modal";
+import { PoseSprite } from "../components/pose-sprite";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST, timeOf, weatherOf, type Stop } from "../content/forest";
@@ -212,16 +213,17 @@ function Hello({ stop, onHelp }: { stop: Stop; onHelp: () => void }) {
         <p>{line.text}</p>
       </button>
       <div className="talkers">
-        <Pic
-          key={`r-${resPose}`}
+        <PoseSprite
           name={residentPic(stop, resPose)}
-          className={`talker talker-res ${line.who === "res" ? "is-talking" : ""}`}
-          alt={stop.name}
+          className={`dialogue-portrait ${line.who === "res" ? "is-speaking" : ""}`}
+          imageClassName={`talker-res ${line.who === "res" ? "is-talking" : ""}`}
+          label={stop.name}
         />
-        <Fox
-          key={`f-${foxPose}`}
-          pose={foxPose}
-          className={`talker talker-fox ${line.who === "fox" ? "is-talking" : ""}`}
+        <PoseSprite
+          name={`fox-${foxPose}`}
+          className={`dialogue-portrait is-fox ${line.who === "fox" ? "is-speaking" : ""}`}
+          imageClassName={`talker-fox ${line.who === "fox" ? "is-talking" : ""}`}
+          label="Лисёнок"
         />
       </div>
       <button

@@ -1,10 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { art } from "../game/assets";
+import { motionArt, animatedFoxPose, useMotionAllowed } from "../game/motion";
 
 /** Decode a new pose before fading it in; keep the previous pose until it is ready. */
-export function PoseSprite({ name, className = "" }: { name: string; className?: string }) {
+export function PoseSprite({
+  name,
+  className = "",
+  imageClassName = "",
+  label,
+}: {
+  name: string;
+  className?: string;
+  imageClassName?: string;
+  label?: string;
+}) {
+  const root = useRef<HTMLSpanElement>(null);
+  const allowed = useMotionAllowed(root, animatedFoxPose(name));
+  const target = motionArt(name, allowed);
   const [layers, setLayers] = useState<{ shown: string; previous: string | null }>({
-    shown: name,
+    shown: target,
     previous: null,
   });
   useEffect(() => {
@@ -12,23 +26,29 @@ export function PoseSprite({ name, className = "" }: { name: string; className?:
     const image = new Image();
     const show = () => {
       if (alive)
-        setLayers((old) => (old.shown === name ? old : { shown: name, previous: old.shown }));
+        setLayers((old) => (old.shown === target ? old : { shown: target, previous: old.shown }));
     };
     image.onload = () => {
       void image.decode().then(show, show);
     };
-    image.src = art(name);
+    image.src = art(target);
     return () => {
       alive = false;
       image.onload = null;
     };
-  }, [name]);
+  }, [target]);
   useEffect(() => {
     const timer = window.setTimeout(() => setLayers((old) => ({ ...old, previous: null })), 260);
     return () => window.clearTimeout(timer);
   }, [layers.shown]);
   return (
-    <span className={`pose-sprite ${className}`} aria-hidden="true">
+    <span
+      ref={root}
+      className={`pose-sprite ${className} ${animatedFoxPose(name) ? "has-frame-motion" : ""}`}
+      aria-hidden={label ? undefined : true}
+      role={label ? "img" : undefined}
+      aria-label={label}
+    >
       {layers.previous && (
         <img
           key={`old-${layers.previous}`}
@@ -41,7 +61,7 @@ export function PoseSprite({ name, className = "" }: { name: string; className?:
       <img
         key={layers.shown}
         src={art(layers.shown)}
-        className="pose-layer pose-in"
+        className={`pose-layer pose-in ${imageClassName}`}
         alt=""
         draggable={false}
       />

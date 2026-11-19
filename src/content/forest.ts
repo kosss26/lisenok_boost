@@ -535,11 +535,11 @@ export const onPath = (s: { part: 1 | 2; x: number; y: number }) => ({
 });
 
 export const WORLDS = [
-  { id: "forest", name: "Лес", x: 50, y: 84, open: true },
-  { id: "sea", name: "Море", x: 40, y: 61, open: false },
-  { id: "mountains", name: "Горы", x: 50, y: 44, open: false },
-  { id: "city", name: "Город", x: 52, y: 27, open: false },
-  { id: "space", name: "Космос", x: 50, y: 13, open: false },
+  { id: "forest", name: "Лес", x: 50, y: 86.3, open: true },
+  { id: "sea", name: "Море", x: 40, y: 60.8, open: false },
+  { id: "mountains", name: "Горы", x: 50, y: 46.8, open: false },
+  { id: "city", name: "Город", x: 50, y: 31.5, open: false },
+  { id: "space", name: "Космос", x: 50, y: 17, open: false },
 ] as const;
 
 /** Time of day and weather along the path: morning at the entrance, dusk deep in the forest. */

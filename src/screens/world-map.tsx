@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST, WORLDS } from "../content/forest";
 import { NAMES } from "../content/names";
@@ -12,6 +12,8 @@ export function WorldMap() {
   const p = useProgress();
   const navigate = useNavigate();
   const stars = starsIn(p);
+  const noticeOrigin = useRef<HTMLButtonElement>(null);
+  const [notice, setNotice] = useState("");
   const [shake, setShake] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,14 +46,18 @@ export function WorldMap() {
                   : `${w.name}: скоро появится`
               }
               style={{ left: `${w.x}%`, top: `${w.y}%` }}
-              onClick={() => {
+              onClick={(e) => {
                 if (w.open) {
                   void sfx("step");
                   void navigate({ to: "/forest" });
                   return;
                 }
                 void sfx("tap");
+                noticeOrigin.current = e.currentTarget;
                 setShake(w.id);
+                setNotice(
+                  `${w.name} — новое приключение появится позже. Сейчас можно исследовать лес.`,
+                );
                 window.setTimeout(() => setShake(null), 600);
                 void say(["locked-soon"]);
               }}
@@ -68,10 +74,24 @@ export function WorldMap() {
               </span>
             </button>
           ))}
-          <Fox pose="point" className="map-fox" />
+          <Fox pose="wave" className="map-fox" />
         </>
       }
     >
+      {notice && (
+        <button
+          type="button"
+          className="map-notice"
+          onClick={() => {
+            setNotice("");
+            noticeOrigin.current?.focus();
+          }}
+          aria-label="Закрыть сообщение"
+        >
+          <span role="status">{notice}</span>
+          <span aria-hidden>×</span>
+        </button>
+      )}
       <div className="top-bar">
         <button
           type="button"

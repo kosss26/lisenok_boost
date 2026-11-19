@@ -1,28 +1,50 @@
 /** Small shared pieces: pictures, the grown-up hold button, top bar, the fox. */
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { art } from "../game/assets";
 import { sfx } from "../game/audio";
 import { openParents } from "./parents-state";
 import { IconBack, IconGear } from "./icons";
+import { motionArt, animatedFoxPose, useMotionAllowed } from "../game/motion";
 
 export function Pic({
   name,
   className,
   alt = "",
   style,
+  ref,
 }: {
   name: string;
+  ref?: Ref<HTMLImageElement>;
   className?: string;
   alt?: string;
   style?: React.CSSProperties;
 }) {
-  return <img className={className} src={art(name)} alt={alt} draggable={false} style={style} />;
+  return (
+    <img
+      ref={ref}
+      className={className}
+      src={art(name)}
+      alt={alt}
+      draggable={false}
+      style={style}
+    />
+  );
 }
 
 export type FoxPose = "wave" | "walk" | "jump" | "think" | "cheer" | "read" | "point";
 export function Fox({ pose, className = "" }: { pose: FoxPose; className?: string }) {
-  return <Pic name={`fox-${pose}`} className={`fox ${className}`} alt="Лисёнок" />;
+  const ref = useRef<HTMLImageElement>(null);
+  const name = `fox-${pose}`;
+  const allowed = useMotionAllowed(ref, animatedFoxPose(name));
+  return (
+    <Pic
+      ref={ref}
+      name={motionArt(name, allowed)}
+      className={`fox ${className} ${animatedFoxPose(name) ? "has-frame-motion" : ""}`}
+      alt="Лисёнок"
+    />
+  );
 }
 
 /** Grown-up button: does something only after holding it for 2.5 seconds. */

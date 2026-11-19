@@ -36,7 +36,10 @@ test("plays a stop with the network off", { skip: !process.env.OFFLINE }, async 
       img: sw.get("img"),
       aud: sw.get("aud"),
       avif: urls.filter((u) => u.endsWith(".avif")).length,
-      webp: urls.filter((u) => u.startsWith("/art/") && u.endsWith(".webp")).length,
+      webp: urls.filter(
+        (u) => u.startsWith("/art/") && u.endsWith(".webp") && !u.endsWith("-motion.webp"),
+      ).length,
+      motion: urls.filter((u) => u.endsWith("-motion.webp")).length,
       ogg: urls.filter((u) => u.endsWith(".ogg")).length,
       mp3: urls.filter((u) => u.endsWith(".mp3")).length,
       shown: document.querySelector("img[src*='/art/']")?.getAttribute("src") ?? "",
@@ -46,6 +49,11 @@ test("plays a stop with the network off", { skip: !process.env.OFFLINE }, async 
   assert.ok(
     fmt[img] > 100 && fmt[other] === 0,
     `pictures cached as ${img}: ${JSON.stringify(fmt)}`,
+  );
+  assert.equal(
+    fmt.motion,
+    2,
+    "both native animated foxes are cached alongside the chosen static format",
   );
   const [aud, otherAud] = fmt.aud === "ogg" ? ["ogg", "mp3"] : ["mp3", "ogg"];
   assert.ok(

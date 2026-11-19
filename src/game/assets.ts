@@ -33,7 +33,7 @@ export function asset(path: string) {
 }
 const sound = (path: string) => asset(formats.opus ? path.replace(/\.mp3$/, ".ogg") : path);
 export const art = (name: string) =>
-  asset(formats.avif ? `/art/${name}.avif` : `/art/${name}.webp`);
+  asset(formats.avif && !name.endsWith("-motion") ? `/art/${name}.avif` : `/art/${name}.webp`);
 export const voiceUrl = (key: string) => sound(`/voice/${key}.mp3`);
 export const sfxUrl = (name: string) => sound(`/sfx/${name}.mp3`);
 export type Scene = "map" | "tasks" | "celebrate";

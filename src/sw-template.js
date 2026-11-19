@@ -8,7 +8,13 @@ const skip = [
   q.get("aud") === "ogg" ? ".mp3" : ".ogg",
 ];
 const URLS = ALL.filter(
-  (u) => !skip.some((ext) => /^\/(art|voice|sfx|music)\//.test(u) && u.split("?")[0].endsWith(ext)),
+  (u) =>
+    !skip.some(
+      (ext) =>
+        /^\/(art|voice|sfx|music)\//.test(u) &&
+        u.split("?")[0].endsWith(ext) &&
+        !u.split("?")[0].endsWith("-motion.webp"),
+    ),
 );
 const CACHE = `lisenok-${VERSION}-${q.get("img")}-${q.get("aud")}`;
 
