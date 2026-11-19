@@ -7,21 +7,38 @@ import { BackButton, Fox, ParentsButton, Pic, StarCount } from "../components/ki
 import { art } from "../game/assets";
 import { say, sfx } from "../game/audio";
 import { DifficultyBadge } from "../components/difficulty";
-import { nextStopIndex, starsIn, stopOpen, update, useProgress } from "../game/progress";
+import {
+  getActiveProfile,
+  nextStopIndex,
+  starsIn,
+  stopOpen,
+  update,
+  useProgress,
+} from "../game/progress";
 
+const NEXT_NAMES: Record<string, string> = {
+  hedgehog: "ёжику",
+  squirrel: "белке",
+  owl: "сове",
+  mouse: "мышке",
+  hare: "зайчику",
+  beaver: "бобру",
+  frog: "лягушонку",
+  bear: "медвежонку",
+  badger: "барсуку",
+};
 type Pt = { x: number; y: number };
 /** Where the fox stood when the forest was last shown (this launch) — it walks on from there. */
-let lastFox: Pt | null = null;
+let lastFox: { profile: string; point: Pt } | null = null;
 /** the forest is two pictures high (entrance below, deep forest above); points are % of all of it */
 const ENTRANCE: Pt = { x: 50, y: 99.5 };
 const reduced = () =>
   typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** The fox waits on the path most of the way from the last solved stop to the next one. */
+/** The fox waits beside the next resident, leaving the bottom action and clearing unobstructed. */
 function foxSpot(next: number): Pt {
   const to = onPath(FOREST[Math.min(next, FOREST.length - 1)]);
-  const from = next > 0 ? onPath(FOREST[next - 1]) : ENTRANCE;
-  return { x: from.x + (to.x - from.x) * 0.62, y: from.y + (to.y - from.y) * 0.62 + 1.5 };
+  return { x: to.x > 50 ? to.x - 19 : to.x + 19, y: to.y + 1 };
 }
 /** Farther stops (higher on the picture) are drawn smaller, like in perspective. */
 const depth = (y: number) => Math.min(1, 0.68 + 0.32 * (y / 80));
@@ -37,14 +54,23 @@ export function Forest() {
   const [shake, setShake] = useState<string | null>(null);
 
   const target = foxSpot(next);
-  const start = reduced() ? target : (lastFox ?? ENTRANCE);
+  const start = reduced()
+    ? target
+    : lastFox?.profile === getActiveProfile()
+      ? lastFox.point
+      : ENTRANCE;
   const walks = start.x !== target.x || start.y !== target.y;
   const [fox, setFox] = useState<Pt>(start);
   const [arrived, setArrived] = useState(!walks);
   const [celebrateCard, setCelebrateCard] = useState(reduced());
+  const nextStop = FOREST[Math.min(next, FOREST.length - 1)];
+  const enterNext = () => {
+    void sfx("step");
+    void navigate({ to: "/forest/$stopId", params: { stopId: nextStop.id } });
+  };
 
   useEffect(() => {
-    lastFox = target;
+    lastFox = { profile: getActiveProfile(), point: target };
     const timers: number[] = [];
     if (walks) {
       timers.push(window.setTimeout(() => setFox(target), 250));
@@ -190,6 +216,25 @@ export function Forest() {
         </div>
       </div>
       <div className="scene-layer">
+        {!allDone && (
+          <button
+            type="button"
+            className="trail-continue"
+            onClick={enterNext}
+            aria-label={`Продолжить: ${nextStop.name}, остановка ${next + 1} из ${FOREST.length}`}
+          >
+            <span className="trail-continue-icon" aria-hidden>
+              ↟
+            </span>
+            <span>
+              <small>
+                Следующая остановка · {next + 1}/{FOREST.length}
+              </small>
+              <strong>К {NEXT_NAMES[nextStop.resident] ?? nextStop.name.toLowerCase()}</strong>
+            </span>
+            <span aria-hidden>→</span>
+          </button>
+        )}
         <div className="top-bar">
           <BackButton to="/map" label="На карту" />
           <StarCount n={starsIn(p)} total={FOREST.length} />
@@ -273,21 +318,21 @@ const FLIES = [
 function ForestAmbient({ stream = true }: { stream?: boolean }) {
   return (
     <div className="ambient" aria-hidden>
-      {(stream ? SPARKLES : []).map(([x, y], i) => (
+      {(stream ? SPARKLES.slice(0, 4) : []).map(([x, y], i) => (
         <span
           key={`s${i}`}
           className="sparkle"
           style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${(i * 0.53) % 2.4}s` }}
         />
       ))}
-      {FLIES.map(([x, y], i) => (
+      {FLIES.slice(0, 3).map(([x, y], i) => (
         <span
           key={`f${i}`}
           className={`firefly f${i % 4}`}
           style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 0.8}s` }}
         />
       ))}
-      {LEAVES.map((l, i) => (
+      {LEAVES.slice(0, 2).map((l, i) => (
         <span
           key={`l${i}`}
           className="leaf-fall"
@@ -306,7 +351,7 @@ const TINT: Record<TimeOfDay, string> = {
   morning: "rgba(255, 186, 140, 0.16)",
   day: "rgba(255, 255, 240, 0)",
   evening: "rgba(255, 128, 48, 0.2)",
-  dusk: "rgba(46, 38, 120, 0.4)",
+  dusk: "rgba(46, 38, 120, 0.24)",
 };
 function band(w: "rain" | "fog") {
   const ys = FOREST.flatMap((s, i) => (weatherOf(i) === w ? [onPath(s).y] : []));

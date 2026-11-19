@@ -504,34 +504,34 @@ const ORDER = [
 ];
 /** clearings on the two forest pictures, in path order (% of the picture) */
 const PATH: { part: 1 | 2; x: number; y: number }[] = [
-  { part: 1, x: 71.5, y: 79 },
-  { part: 1, x: 30, y: 73.5 },
-  { part: 1, x: 63, y: 60 },
-  { part: 1, x: 32.5, y: 55.5 },
-  { part: 1, x: 66, y: 36.5 },
-  { part: 1, x: 43, y: 27.5 },
-  { part: 1, x: 63, y: 20 },
-  { part: 1, x: 47, y: 15.5 },
-  { part: 1, x: 60, y: 10 },
-  { part: 2, x: 42.5, y: 90.3 },
-  { part: 2, x: 59, y: 79 },
-  { part: 2, x: 41, y: 70.8 },
-  { part: 2, x: 54.7, y: 61.3 },
-  { part: 2, x: 38.5, y: 54.2 },
-  { part: 2, x: 40.3, y: 45.7 },
-  { part: 2, x: 54.7, y: 38.6 },
-  { part: 2, x: 41, y: 31.7 },
-  { part: 2, x: 56.8, y: 24.9 },
+  { part: 1, x: 69.5, y: 80.3 },
+  { part: 1, x: 29.5, y: 74 },
+  { part: 1, x: 62, y: 61.1 },
+  { part: 1, x: 31, y: 55.1 },
+  { part: 1, x: 66, y: 36 },
+  { part: 1, x: 39, y: 27.6 },
+  { part: 1, x: 60, y: 21.1 },
+  { part: 1, x: 46, y: 15 },
+  { part: 1, x: 57, y: 9 },
+  { part: 2, x: 39.5, y: 87.6 },
+  { part: 2, x: 58, y: 76.8 },
+  { part: 2, x: 36, y: 68.5 },
+  { part: 2, x: 55.5, y: 58.5 },
+  { part: 2, x: 38, y: 53.5 },
+  { part: 2, x: 39.5, y: 44 },
+  { part: 2, x: 57, y: 37 },
+  { part: 2, x: 39.8, y: 29.8 },
+  { part: 2, x: 57, y: 23 },
 ];
 export const FOREST: Stop[] = ORDER.map((id, i) => {
   const def = DEFS.find((d) => d.id === id)!;
   return { ...def, ...PATH[i] };
 });
 
-/** where a clearing is on the whole (two pictures high) forest: x %, y % of the full height */
+/** Full-map coordinates. Both paintings use 52% height, overlapping from 48% to 52% for a soft seam. */
 export const onPath = (s: { part: 1 | 2; x: number; y: number }) => ({
   x: s.x,
-  y: s.part === 1 ? 50 + s.y / 2 : s.y / 2,
+  y: s.part === 1 ? 48 + s.y * 0.52 : s.y * 0.52,
 });
 
 export const WORLDS = [

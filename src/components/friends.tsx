@@ -7,7 +7,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { tickleKey } from "../content/voice";
 import { isSpeaking, say, sfx } from "../game/audio";
 import { vibrate } from "../game/haptics";
-import { Fox, Pic, type FoxPose } from "./kit";
+import type { FoxPose } from "./kit";
+import { PoseSprite } from "./pose-sprite";
 import type { Guide, Mood } from "./tasks";
 
 /** how each resident reacts to a tickle */
@@ -44,6 +45,7 @@ export function TaskFriends({
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
   const tickle = (target: "res" | "fox") => {
+    if (target === "fox" ? react.fox : react.res) return;
     void sfx("pick", 0.5);
     void vibrate(15);
     // a giggle never cuts the question or the praise: then the friend only moves
@@ -95,7 +97,7 @@ export function TaskFriends({
         aria-label={`Пощекотать: ${name}`}
         onClick={() => tickle("res")}
       >
-        <Pic name={who + residentPose} className={`friend-resident mood-${mood}`} alt="" />
+        <PoseSprite name={who + residentPose} className={`friend-resident mood-${mood}`} />
       </button>
       <button
         ref={foxRef}
@@ -110,7 +112,7 @@ export function TaskFriends({
         data-guide={guide?.stage ?? 0}
         onClick={() => tickle("fox")}
       >
-        <Fox pose={foxPose} className={`friend-fox mood-${mood}`} />
+        <PoseSprite name={`fox-${foxPose}`} className={`friend-fox mood-${mood}`} />
       </button>
     </div>
   );

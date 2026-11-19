@@ -41,12 +41,18 @@ export function Shell() {
     };
     window.addEventListener("pointerdown", first, { once: true });
     window.addEventListener("keydown", first, { once: true });
-    const vis = () => (document.hidden ? pauseAudio() : resumeAudio());
+    const vis = () => {
+      document.documentElement.toggleAttribute("data-game-hidden", document.hidden);
+      if (document.hidden) pauseAudio();
+      else resumeAudio();
+    };
+    vis();
     document.addEventListener("visibilitychange", vis);
     return () => {
       window.removeEventListener("pointerdown", first);
       window.removeEventListener("keydown", first);
       document.removeEventListener("visibilitychange", vis);
+      document.documentElement.removeAttribute("data-game-hidden");
     };
   }, []);
 
@@ -64,7 +70,7 @@ export function Shell() {
   }, [resting]);
 
   return (
-    <div className="app">
+    <div className={`app ${parentsOpen || resting ? "is-paused" : ""}`}>
       <div className="game-root" key={getActiveProfile()}>
         <Outlet />
       </div>

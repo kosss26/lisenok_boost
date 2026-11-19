@@ -61,6 +61,7 @@ export function PlaceStar({ stopId, onPlaced }: { stopId: string; onPlaced: () =
         aria-label="Небо: нажми, где будет сиять звёздочка"
         onKeyDown={(e) => {
           if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
           const r = skyRef.current!.getBoundingClientRect();
           const [x, y] = freeSkySpot(getProgress(), Object.keys(getProgress().sky).length + 1);
           put(r.left + (r.width * x) / 100, r.top + (r.height * y) / 100);

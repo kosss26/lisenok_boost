@@ -1,0 +1,397 @@
+/* Soft forest art direction. Animate actions; keep the learning area quiet. */
+:root {
+  --ease-settle: cubic-bezier(0.22, 0.7, 0.28, 1);
+  --ease-press: cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.phase-task .scene-bg {
+  filter: saturate(0.82);
+  opacity: 0.88;
+}
+.phase-task .scene-box {
+  background: #e8e9c9;
+}
+.forest-bg-2 {
+  height: 52%;
+  object-fit: fill;
+  mask-image: linear-gradient(black 92.3%, transparent);
+  -webkit-mask-image: linear-gradient(black 92.3%, transparent);
+}
+.forest-seam {
+  top: 49%;
+  height: 2%;
+  background: linear-gradient(transparent, rgb(178 192 111 / 0.34), transparent);
+}
+.forest-scroll {
+  scroll-padding-block: 90px 120px;
+}
+.stop.is-locked {
+  opacity: 0.7;
+}
+.stop.is-locked .stop-pic {
+  filter: saturate(0.45) brightness(0.95) drop-shadow(0 3px 3px rgb(33 52 24 / 0.18));
+  opacity: 1;
+}
+.stop-pic {
+  filter: drop-shadow(0 4px 5px rgb(33 52 24 / 0.25));
+}
+.stop.is-done .stop-body {
+  animation: quiet-greeting 9s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+.stop.is-next.is-greeting .stop-body {
+  animation:
+    greet 0.75s var(--ease-settle) 1,
+    idle 5.5s ease-in-out 0.8s infinite;
+}
+.stop-next-label {
+  top: -5px;
+  font-size: 13px;
+  padding: 3px 10px;
+  border-width: 1px;
+  box-shadow: 0 2px 6px rgb(25 63 42 / 0.1);
+}
+.trail-continue {
+  position: absolute;
+  bottom: calc(14px + var(--safe-bottom));
+  left: 14px;
+  right: 14px;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border: 1px solid rgb(255 255 235 / 0.8);
+  border-radius: 23px;
+  background: #fff8e9;
+  box-shadow:
+    0 5px 0 #b5a878,
+    0 9px 24px rgb(36 59 23 / 0.2);
+  color: #245d4d;
+  z-index: 25;
+  text-align: left;
+  transition:
+    transform 0.16s var(--ease-press),
+    box-shadow 0.16s;
+}
+.trail-continue > span:nth-child(2) {
+  flex: 1;
+}
+.trail-continue strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+.trail-continue small {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6c7658;
+  margin-bottom: 2px;
+}
+.trail-continue > span:last-child {
+  font-size: 26px;
+}
+.trail-continue-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #dfecd4;
+  font-size: 30px;
+}
+.trail-continue:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 #b5a878,
+    0 4px 12px rgb(36 59 23 / 0.15);
+}
+/* A fixed foot anchor keeps pose changes from looking like a jump. */
+.pose-sprite {
+  position: relative;
+  display: block;
+  width: 88px;
+  height: 88px;
+  transform-origin: 50% 95%;
+}
+.pose-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+}
+.pose-in {
+  animation: pose-fade-in 0.24s ease-out both;
+}
+.pose-out {
+  animation: pose-fade-out 0.24s ease-out both;
+}
+.friend-btn {
+  -webkit-touch-callout: none;
+}
+.friend-fox-btn:not(.is-guiding):not([class*="react-"]) .mood-idle {
+  animation: gentle-breath 5.6s ease-in-out infinite;
+}
+.friend-res-btn:not([class*="react-"]) .mood-idle {
+  animation: gentle-breath 6.4s ease-in-out 0.9s infinite;
+}
+.friend-fox.mood-happy,
+.friend-resident.mood-happy {
+  animation: happy-nod 0.7s var(--ease-settle) 1;
+}
+.friend-fox.mood-oops {
+  animation: kind-tilt 0.65s ease-in-out 1;
+}
+.friend-fox-btn.guide-1 .friend-fox {
+  animation: attentive-lean 4s ease-in-out infinite;
+}
+.friend-fox-btn.guide-2 .friend-fox {
+  animation: attentive-lean 2.6s ease-in-out infinite;
+}
+.talker,
+.talker.is-talking {
+  animation: portrait-arrive 0.24s ease-out both;
+}
+.talker.is-talking {
+  animation:
+    portrait-arrive 0.24s ease-out both,
+    gentle-breath 4s ease-in-out 0.3s infinite;
+}
+.title-fox.fox {
+  animation: title-breath 5.5s ease-in-out infinite;
+}
+.fox-track.is-arrived .forest-fox {
+  animation:
+    portrait-arrive 0.25s ease-out,
+    gentle-breath 5.5s ease-in-out 0.3s infinite;
+}
+.game-root > .scene {
+  animation: screen-arrive 0.18s ease-out both;
+}
+.task {
+  animation: task-arrive 0.2s var(--ease-settle) both;
+}
+.option:not(.is-dragging),
+.piece:not(.is-dragging) {
+  transition:
+    transform 0.14s var(--ease-press),
+    box-shadow 0.14s,
+    background-color 0.18s,
+    opacity 0.18s;
+}
+.option:not(.is-dragging):not(.is-off):not(.is-right):active,
+.piece:not(.is-dragging):not(.is-used):active {
+  transform: translateY(2px) scale(0.97);
+}
+.option.is-right {
+  box-shadow:
+    0 0 0 3px #57a578,
+    0 7px 0 #d9e7c9;
+}
+.reward-rays {
+  opacity: 0.35;
+}
+.gift-pic {
+  animation: gift-hello 0.65s var(--ease-settle) 1;
+}
+.gift-box img {
+  animation: quiet-greeting 5s ease-in-out infinite;
+}
+.album-slot.is-opening .gift-box img {
+  animation: box-open 0.5s ease-in both;
+}
+.sky-placed.is-new {
+  animation: star-settle 0.65s var(--ease-settle) 1;
+}
+@keyframes gentle-breath {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.008, 1.018);
+  }
+}
+@keyframes title-breath {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.008, 1.015);
+  }
+}
+@keyframes pose-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pose-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes quiet-greeting {
+  0%,
+  85%,
+  100% {
+    transform: rotate(0);
+  }
+  90% {
+    transform: rotate(-3deg);
+  }
+  95% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes happy-nod {
+  0%,
+  100% {
+    transform: none;
+  }
+  35% {
+    transform: translateY(-7px) rotate(-3deg);
+  }
+  65% {
+    transform: translateY(1px) rotate(2deg);
+  }
+}
+@keyframes kind-tilt {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: rotate(-4deg) translateY(2px);
+  }
+}
+@keyframes attentive-lean {
+  0%,
+  80%,
+  100% {
+    transform: none;
+  }
+  40%,
+  60% {
+    transform: translate(-2px, -2px) rotate(-2deg);
+  }
+}
+@keyframes portrait-arrive {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes screen-arrive {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes task-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gift-hello {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.035);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes star-settle {
+  0% {
+    opacity: 0.4;
+    scale: 0.7;
+  }
+  65% {
+    opacity: 1;
+    scale: 1.12;
+  }
+  100% {
+    scale: 1;
+  }
+}
+[data-game-hidden] .app *,
+.app.is-paused .game-root *,
+.game-root[inert] * {
+  animation-play-state: paused !important;
+}
+@media (hover: hover) {
+  .trail-continue:hover,
+  .option:not(.is-off):hover {
+    background-color: #fffdf6;
+  }
+}
+@media (max-width: 350px) {
+  .trail-continue {
+    padding: 10px 12px;
+    gap: 8px;
+    min-height: 62px;
+  }
+  .trail-continue strong {
+    font-size: 20px;
+  }
+  .trail-continue small {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app *,
+  .app *::before,
+  .app *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .pose-out {
+    display: none;
+  }
+  .ambient,
+  .rain {
+    display: none;
+  }
+}
+
+/* Paint the entrance underneath the complete fade area, avoiding a hard alpha edge. */
+.forest-bg-1 {
+  top: 48%;
+  height: 52%;
+  object-fit: fill;
+}
+.forest-half-1 {
+  top: 48%;
+  height: 52%;
+}
+.forest-half-2 {
+  height: 52%;
+}
+.forest-seam {
+  display: none;
+}
