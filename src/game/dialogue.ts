@@ -6,13 +6,13 @@ import { say, stopVoice } from "./audio";
  * `index` stops at the last line; `finished` turns true once it has been heard (or skipped past).
  * `next()` cuts the current clip and moves on — a tap on the speech bubble.
  */
-export function useDialogue(keys: string[], { delay = 300, gap = 350 } = {}) {
+export function useDialogue(keys: string[], { delay = 300, gap = 350, enabled = true } = {}) {
   const [step, setStep] = useState(0);
   const count = keys.length;
   const key = keys[step];
 
   useEffect(() => {
-    if (step >= count) return;
+    if (!enabled || step >= count) return;
     let alive = true;
     let wait = 0;
     const start = window.setTimeout(
@@ -27,7 +27,7 @@ export function useDialogue(keys: string[], { delay = 300, gap = 350 } = {}) {
       window.clearTimeout(start);
       window.clearTimeout(wait);
     };
-  }, [step, count, key, delay, gap]);
+  }, [step, count, key, delay, gap, enabled]);
 
   const next = useCallback(() => {
     if (step >= count) return;

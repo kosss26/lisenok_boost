@@ -16,7 +16,8 @@ export type Zone = {
   /** false: no pull — the item lands exactly where it is let go (the sky) */
   magnet?: boolean;
 };
-type Active = { key: string; dx: number; dy: number; near: number | null };
+type DragPosition = NonNullable<CSSProperties["position"]>;
+type Active = { key: string; dx: number; dy: number; near: number | null; position: DragPosition };
 
 const START = 8; // px of movement before a press becomes a drag
 const SLACK = 34; // a drop a little outside the zone still counts
@@ -45,6 +46,7 @@ export function useDrag<K extends string | number>({
     x: number;
     y: number;
     base: DOMRect;
+    position: DragPosition;
     el: HTMLElement;
     moved: boolean;
     near: number | null;
@@ -90,12 +92,14 @@ export function useDrag<K extends string | number>({
   const bind = (key: K) => ({
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       if (disabled || (e.pointerType === "mouse" && e.button !== 0)) return;
+      const position = getComputedStyle(e.currentTarget).position as DragPosition;
       press.current = {
         key,
         id: e.pointerId,
         x: e.clientX,
         y: e.clientY,
         base: e.currentTarget.getBoundingClientRect(),
+        position: position === "static" ? "relative" : position,
         el: e.currentTarget,
         moved: false,
         near: null,
@@ -121,7 +125,7 @@ export function useDrag<K extends string | number>({
         onNear?.(at.near);
       }
       p.near = at.near;
-      setActive({ key: String(key), ...at });
+      setActive({ key: String(key), position: p.position, ...at });
     },
     onPointerUp: () => finish(true),
     onPointerCancel: () => finish(false),
@@ -141,7 +145,7 @@ export function useDrag<K extends string | number>({
           transform: `translate(${active.dx}px, ${active.dy}px) scale(1.06)`,
           transition: "none",
           zIndex: 30,
-          position: "relative",
+          position: active.position,
         }
       : undefined;
 

@@ -51,6 +51,10 @@ export function Forest() {
   const next = nextStopIndex(p);
   const allDone = next >= FOREST.length;
   const celebrate = allDone && !p.forestCelebrated;
+  const [selected, setSelected] = useState<string | null>(null);
+  const selecting = useRef(false);
+  const selectionTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(selectionTimer.current), []);
   const [shake, setShake] = useState<string | null>(null);
 
   const target = foxSpot(next);
@@ -64,10 +68,17 @@ export function Forest() {
   const [arrived, setArrived] = useState(!walks);
   const [celebrateCard, setCelebrateCard] = useState(reduced());
   const nextStop = FOREST[Math.min(next, FOREST.length - 1)];
-  const enterNext = () => {
+  const enterStop = (id: string) => {
+    if (selecting.current) return;
+    selecting.current = true;
+    setSelected(id);
     void sfx("step");
-    void navigate({ to: "/forest/$stopId", params: { stopId: nextStop.id } });
+    selectionTimer.current = window.setTimeout(
+      () => void navigate({ to: "/forest/$stopId", params: { stopId: id } }),
+      reduced() ? 0 : 220,
+    );
   };
+  const enterNext = () => enterStop(nextStop.id);
 
   useEffect(() => {
     lastFox = { profile: getActiveProfile(), point: target };
@@ -146,6 +157,7 @@ export function Forest() {
                 className={[
                   "stop",
                   done ? "is-done" : "",
+                  selected === stop.id ? "is-selected" : "",
                   isNext ? "is-next" : "",
                   isNext && arrived ? "is-greeting" : "",
                   open ? "" : "is-locked",
@@ -159,8 +171,10 @@ export function Forest() {
                     "--d": `${(i * 0.37) % 2}s`,
                   } as CSSProperties
                 }
-                aria-label={`${stop.name}${done ? ", звезда получена" : open ? "" : ", пока закрыто"}`}
+                aria-current={isNext ? "step" : undefined}
+                aria-label={`${stop.name}${isNext ? ", следующая остановка" : ""}${done ? ", звезда получена" : open ? "" : ", пока закрыто"}`}
                 onClick={() => {
+                  if (selecting.current) return;
                   if (!open) {
                     void sfx("tap");
                     setShake(stop.id);
@@ -168,10 +182,10 @@ export function Forest() {
                     void say(["stop-locked"]);
                     return;
                   }
-                  void sfx("step");
-                  void navigate({ to: "/forest/$stopId", params: { stopId: stop.id } });
+                  enterStop(stop.id);
                 }}
               >
+                <span className="stop-ground" aria-hidden />
                 <span className="stop-glow" aria-hidden />
                 <span className="stop-body">
                   <Pic
@@ -183,7 +197,7 @@ export function Forest() {
                 <span className="stop-num" aria-hidden>
                   {i + 1}
                 </span>
-                {isNext && <span className="stop-next-label">Сюда!</span>}
+                {isNext && <span className="stop-next-label">Ждёт тебя</span>}
               </button>
             );
           })}

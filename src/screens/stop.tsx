@@ -1,19 +1,17 @@
 import { NotFound } from "./recovery";
-import { Modal } from "../components/modal";
+import { StoryReward } from "../components/story-reward";
 import { PoseSprite } from "../components/pose-sprite";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FOREST, timeOf, weatherOf, type Stop } from "../content/forest";
 import { StopWeather } from "../components/weather";
-import { introKey, outroKey, youngId } from "../content/voice";
+import { introKey, youngId } from "../content/voice";
 import { useDialogue } from "../game/dialogue";
-import { BackButton, Fox, Pic, Scene } from "../components/kit";
+import { BackButton, Scene } from "../components/kit";
 import { TaskView, type Guide, type Mood } from "../components/tasks";
 import { TaskFriends } from "../components/friends";
 import { DifficultyBadge } from "../components/difficulty";
-import { PlaceStar } from "../components/sky";
-import { giftKey } from "../content/voice";
-import { say, setScene, sfx, stopVoice } from "../game/audio";
+import { setScene, sfx, stopVoice } from "../game/audio";
 import { freeSkySpot, getProgress, placeStar, stopOpen, useProgress } from "../game/progress";
 import { completeSessionTask, clearSession } from "../game/sessions";
 import { LessonDraftContext } from "../game/lesson-draft";
@@ -48,26 +46,16 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
   const reward = session?.reward;
   const [mood, setMood] = useState<Mood>("idle");
   const [guide, setGuide] = useState<Guide>(null);
-  const [starUp, setStarUp] = useState(
-    Boolean(session?.phase === "reward" && (!session.reward?.toPlace || p.sky[stop.id])),
-  );
   const { request, dialog } = useLessonStart();
   useEffect(() => {
     setScene(phase === "task" ? "tasks" : phase === "reward" ? "celebrate" : "map");
   }, [phase]);
   useEffect(() => () => setScene("map"), []);
-  useEffect(() => {
-    if (reward && !reward.toPlace) setStarUp(true);
-  }, [reward]);
   const solved = (m: number, h: boolean) => {
     if (!session) return;
     completeSessionTask(session.id, step, m, h);
     setMood("idle");
     setGuide(null);
-    if (step === 4) {
-      void sfx("star");
-      if (!getProgress().sky[stop.id]) void say(["sky-place"]);
-    }
   };
 
   const leaveReward = () => {
@@ -125,40 +113,8 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
         </>
       )}
 
-      {phase === "reward" && reward && (
-        <Modal className="reward" label="Награда" onClose={leaveReward}>
-          <div className="reward-rays" aria-hidden />
-          {reward.toPlace ? (
-            <PlaceStar
-              stopId={stop.id}
-              onPlaced={() => window.setTimeout(() => setStarUp(true), 900)}
-            />
-          ) : (
-            <Pic name="star-face" className="reward-star" />
-          )}
-          <h2>{reward.first ? "Звёздочка твоя!" : "Ты снова помог!"}</h2>
-          {starUp && (
-            <>
-              <button
-                type="button"
-                className="gift"
-                onClick={() => {
-                  void sfx("pick");
-                  void say([giftKey(stop.id)]);
-                }}
-              >
-                <Pic name={stop.gift} className="gift-pic" />
-                <span>
-                  {reward.first ? `Подарок: ${stop.giftName.toLowerCase()}` : stop.giftName}
-                </span>
-              </button>
-              <Outro stop={stop} />
-            </>
-          )}
-          <button type="button" className="big-btn next-btn" onClick={leaveReward}>
-            Дальше
-          </button>
-        </Modal>
+      {phase === "reward" && reward && session && (
+        <StoryReward key={session.id} stop={stop} reward={reward} onNext={leaveReward} />
       )}
     </Scene>
   );
@@ -212,29 +168,5 @@ function Hello({ stop, onHelp }: { stop: Stop; onHelp: () => void }) {
         Помочь!
       </button>
     </div>
-  );
-}
-
-/** After the star: the resident thanks, the fox answers. */
-function Outro({ stop }: { stop: Stop }) {
-  const keys = [outroKey(stop.id, 0), outroKey(stop.id, 1)];
-  const { index, next } = useDialogue(keys, { delay: 700 });
-  const line = stop.outro[index === keys.length - 1 ? 1 : 0];
-  return (
-    <button
-      type="button"
-      className={`reward-talk from-${line.who}`}
-      onClick={next}
-      aria-label="Дальше"
-    >
-      {line.who === "res" ? (
-        <Pic name={residentPic(stop, line.pose)} className="reward-talker" alt={stop.name} />
-      ) : (
-        <Fox pose={line.pose} className="reward-talker" />
-      )}
-      <span className="reward-say" key={line.text}>
-        {line.text}
-      </span>
-    </button>
   );
 }

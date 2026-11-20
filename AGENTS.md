@@ -27,3 +27,6 @@
 - Service worker updates wait for an explicit menu action; a failed shell install must be rejected and removed. Retain the previous offline cache and unrelated caches.
 - Task art and feedback styles live in `styles/comfort.css`. Keep the reserved `.hint-area` height stable across all help stages. Test dense 12-piece words at 320×568 before changing the compact layout.
 - Quiet task gestures use the existing wave WebP for one 6810 ms cycle, followed by 20 s stillness (`useQuietMotion`). Keep this duration aligned with `tools/pack-fox-motion.py`; motion must stop for hidden/inert content and reduced-motion preferences.
+- Story rewards are presentation-only in `components/story-reward.tsx`; completion is already saved by sessions.ts. `PlaceStar` persists the location before its flight. Keep continue available throughout, cancel timers on unmount, and reveal earned rewards immediately after reload.
+- Reward dialogue pauses when the child requests gift narration (`useDialogue` enabled flag). Never let delayed thank-you audio interrupt a requested gift clip. New journey styling is scoped in `styles/journey.css`.
+- Dragging must preserve an element's existing absolute/fixed positioning; only static tiles need relative positioning for elevation. The reward star is absolutely anchored over its sky. Keep both the sky and continue button fixed while dragging it.
