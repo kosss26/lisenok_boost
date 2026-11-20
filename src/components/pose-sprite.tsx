@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { MediaImage } from "./media-image";
 import { art } from "../game/assets";
-import { motionArt, animatedFoxPose, useMotionAllowed } from "../game/motion";
+import { motionArt, animatedFoxPose, useMotionAllowed, useQuietMotion } from "../game/motion";
 
 /** Decode a new pose before fading it in; keep the previous pose until it is ready. */
 export function PoseSprite({
@@ -9,15 +9,18 @@ export function PoseSprite({
   className = "",
   imageClassName = "",
   label,
+  quiet = false,
 }: {
   name: string;
   className?: string;
   imageClassName?: string;
   label?: string;
+  quiet?: boolean;
 }) {
   const root = useRef<HTMLSpanElement>(null);
   const allowed = useMotionAllowed(root, animatedFoxPose(name));
-  const target = motionArt(name, allowed);
+  const moving = useQuietMotion(allowed, quiet);
+  const target = motionArt(name, moving);
   const [layers, setLayers] = useState<{ shown: string; previous: string | null }>({
     shown: target,
     previous: null,
@@ -46,6 +49,7 @@ export function PoseSprite({
     <span
       ref={root}
       className={`pose-sprite ${className} ${animatedFoxPose(name) ? "has-frame-motion" : ""}`}
+      data-motion={moving ? "gesture" : "still"}
       aria-hidden={label ? undefined : true}
       role={label ? "img" : undefined}
       aria-label={label}

@@ -1,0 +1,399 @@
+/* A quiet paper stage; feedback belongs to the object the child touched. */
+.phase-task .scene-bg {
+  filter: saturate(0.65) brightness(1.04);
+  opacity: 0.68;
+}
+.phase-task .scene-box {
+  background: #e5e8cf;
+}
+.phase-task .stop-weather .rain,
+.phase-task .stop-weather .ambient {
+  opacity: 0.2;
+}
+.task {
+  gap: 8px;
+}
+.task .prompt-text {
+  background: #fffaf0;
+  box-shadow: 0 2px 8px #36462b12;
+  line-height: 1.3;
+}
+.task .hint-btn .icon .fill {
+  animation: none;
+  fill: #efd889;
+}
+.task .card {
+  background: #fffaf1;
+  border: 1px solid #fffdf8;
+  box-shadow:
+    0 3px 0 #d5c9a8,
+    0 7px 18px #33462b12;
+}
+/* Space is reserved before help appears: art, targets and answer buttons stay anchored. */
+.hint-area {
+  height: 76px;
+  flex: 0 0 76px;
+  min-height: 0;
+}
+.task .hint-explanation {
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 8px 12px;
+  background: #edf3e6;
+  border: 1px solid #cbd9be;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.35;
+  box-shadow: none;
+  animation: help-arrive 0.18s ease-out;
+}
+.task .hint-explanation b {
+  color: #365649;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.illustration-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 86%;
+  height: 64%;
+  max-height: 64%;
+  flex: 0 1 64%;
+  min-height: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #f3ebd755, transparent 70%);
+}
+.task .illustration-stage .card-pic {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 3px #66583a26);
+}
+.task .card-build .illustration-stage {
+  height: 56%;
+  max-height: 56%;
+  flex-basis: 56%;
+}
+.task .option-pic {
+  padding: 5px;
+  filter: drop-shadow(0 2px 2px #66583a30);
+}
+.task :is(.count-pic, .ten-pic, .math-pic, .group-pic) {
+  filter: drop-shadow(0 1px 1px #66583a35);
+}
+.task .option {
+  background: #fffdf7;
+  border: 2px solid #f3ecd9;
+  box-shadow:
+    0 4px 0 #d9cdb0,
+    0 6px 12px #4a3c2010;
+}
+.task .piece {
+  background: linear-gradient(#fffef9, #fcf4e1);
+  box-shadow:
+    0 4px 0 #d4c39d,
+    0 6px 12px #4a3c2015;
+}
+.task :is(.option, .piece):not(.is-dragging):not(.is-off):not(.is-used):active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #d4c39d,
+    0 2px 6px #4a3c2010;
+}
+.task :is(.option, .piece):focus-visible {
+  outline: 3px solid #277e70;
+  outline-offset: 4px;
+}
+.task .drag-item.is-dragging {
+  filter: drop-shadow(0 9px 6px #51422636);
+}
+.task .drop-card.is-near > .card {
+  box-shadow:
+    0 0 0 3px #82b8a5,
+    0 6px 16px #4b705126;
+}
+.task .drop-card.is-near :is(.math-answer, .cmp-box, .gap) {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px #82b8a5;
+}
+.task .slots.is-near .slot.is-current {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px #82b8a5;
+}
+.task .slot.is-landed {
+  animation: tile-settle 0.22s ease-out;
+}
+.task :is(.option, .piece).is-shaking {
+  animation: soft-retry 0.34s ease-in-out;
+}
+.task .option.is-right {
+  background: #e9f4e3;
+  border-color: #5d9974;
+  box-shadow:
+    0 4px 0 #b8d1ad,
+    0 0 0 2px #5d9974;
+  animation: answer-settle 0.3s ease-out;
+}
+.task :is(.option, .piece).is-hint {
+  animation: none;
+  outline: 3px solid #c29c39;
+  outline-offset: 2px;
+}
+.task .option.is-reveal {
+  box-shadow: 0 4px 0 #d9cdb0;
+}
+.task .burst-star,
+.task .burst-star:nth-child(even) {
+  width: 15px;
+  height: 15px;
+  left: -7.5px;
+  top: -7.5px;
+  animation: little-spark 0.6s ease-out forwards;
+}
+.task .burst-star:nth-child(1) {
+  --x: 0px;
+  --y: -36px;
+}
+.task .burst-star:nth-child(2) {
+  --x: 32px;
+  --y: -18px;
+}
+.task .burst-star:nth-child(3) {
+  --x: 32px;
+  --y: 18px;
+}
+.task .burst-star:nth-child(4) {
+  --x: 0px;
+  --y: 36px;
+}
+.task .burst-star:nth-child(5) {
+  --x: -32px;
+  --y: 18px;
+}
+.task .burst-star:nth-child(6) {
+  --x: -32px;
+  --y: -18px;
+}
+/* No continuous body bob while thinking. Taps and answer reactions still have one clear gesture. */
+.phase-task .friend-res-btn:not([class*="react-"]) .mood-idle,
+.phase-task .friend-fox-btn:not([class*="react-"]) .mood-idle {
+  animation: none;
+}
+.phase-task .friend-fox-btn.is-guiding .friend-fox {
+  animation: kind-tilt 0.65s ease-out 1;
+}
+@keyframes help-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tile-settle {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes soft-retry {
+  25% {
+    transform: translateX(-3px) rotate(-1deg);
+  }
+  65% {
+    transform: translateX(2px) rotate(1deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes answer-settle {
+  0% {
+    transform: scale(0.97);
+  }
+  65% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes little-spark {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), var(--y)) scale(0.75) rotate(35deg);
+  }
+}
+@media (max-height: 700px) {
+  .hint-area {
+    height: 64px;
+    flex-basis: 64px;
+  }
+  .task .hint-explanation {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  .task {
+    gap: 6px;
+  }
+  .task .card {
+    padding: 10px;
+    gap: 8px;
+  }
+}
+@media (max-height: 590px) {
+  .hint-area {
+    height: 56px;
+    flex-basis: 56px;
+  }
+  .task .hint-explanation b {
+    display: inline;
+    margin-right: 4px;
+  }
+  .task .hint-explanation {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .task .prompt-text {
+    font-size: 15px;
+    padding: 6px 8px;
+  }
+  .task .option {
+    min-height: 64px;
+  }
+  .task .option-pic {
+    height: 62px;
+  }
+  .task .options-pictures.n4 .option-pic {
+    height: 52px;
+  }
+  .task .piece {
+    height: 56px;
+    min-width: 48px;
+  }
+  .task .slot {
+    height: 44px;
+  }
+  .task .options-words .option {
+    min-height: 48px;
+  }
+  .task .options-words .option-label {
+    font-size: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task .hint-explanation,
+  .task :is(.option, .piece, .slot),
+  .phase-task .friend-fox-btn.is-guiding .friend-fox {
+    animation: none !important;
+  }
+  .task .burst {
+    display: none;
+  }
+}
+
+.task .slots {
+  position: relative;
+}
+/* On short phones, put the word beside its picture instead of shrinking the subject to a dot. */
+@media (max-height: 590px) {
+  .task .card-build {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: center;
+    justify-content: stretch;
+  }
+  .task .card-build .illustration-stage {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    min-height: 72px;
+  }
+  .task .card-build .slots {
+    min-width: 0;
+    gap: 5px;
+  }
+  .task .card-build .slot {
+    width: 29px;
+    min-width: 29px;
+    font-size: 24px;
+  }
+  .task.unit-syllable .card-build .slot {
+    width: auto;
+    min-width: 56px;
+    padding: 0 4px;
+  }
+}
+.task .drop-card.is-target > .card {
+  box-shadow:
+    0 3px 0 #d5c9a8,
+    0 0 0 2px #d7bd6b;
+}
+.task .drop-card.is-target :is(.math-answer, .cmp-box, .gap) {
+  animation: none;
+  outline: 2px solid #c29c39;
+  outline-offset: 2px;
+}
+.phase-task .friend-btn.react-curl {
+  animation: small-curl 0.8s ease-in-out;
+}
+.phase-task .friend-btn.react-turn {
+  animation: small-turn 0.8s ease-in-out;
+}
+.phase-task .friend-btn.react-jump {
+  animation: small-hop 0.65s ease-out;
+}
+@keyframes small-curl {
+  35%,
+  60% {
+    transform: translateY(4px) rotate(-12deg) scale(0.93);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes small-turn {
+  40% {
+    transform: rotate(7deg) translateX(2px);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes small-hop {
+  45% {
+    transform: translateY(-12px);
+  }
+  100% {
+    transform: none;
+  }
+}
+@media (max-height: 590px) {
+  .task .pieces:is(.n10, .n11, .n12) {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .task .pieces:is(.n10, .n11, .n12) .piece {
+    min-width: 0;
+    width: 100%;
+    height: 52px;
+    padding: 0 3px;
+    font-size: 28px;
+  }
+}

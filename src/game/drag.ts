@@ -138,7 +138,7 @@ export function useDrag<K extends string | number>({
   const style = (key: K): CSSProperties | undefined =>
     active && active.key === String(key)
       ? {
-          transform: `translate(${active.dx}px, ${active.dy}px) scale(1.12)`,
+          transform: `translate(${active.dx}px, ${active.dy}px) scale(1.06)`,
           transition: "none",
           zIndex: 30,
           position: "relative",

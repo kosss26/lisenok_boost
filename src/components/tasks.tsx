@@ -246,7 +246,9 @@ function VisualCard({
     case "picture":
       return (
         <div className="card card-picture">
-          <Pic name={visual.pic} className="card-pic" />
+          <div className="illustration-stage">
+            <Pic name={visual.pic} className="card-pic" />
+          </div>
           {visual.text && (
             <div className="gap-word">
               {[...visual.text].map((c, i) =>
@@ -551,7 +553,9 @@ function Build({
       <PromptBar task={task} onRepeat={a.repeat} onHint={a.hint} />
       <HintExplanation task={task} stage={a.hintStage} pruned={pruned >= 0} />
       <div className="card card-build">
-        <Pic name={task.pic} className="card-pic" />
+        <div className="illustration-stage">
+          <Pic name={task.pic} className="card-pic" />
+        </div>
         <div
           ref={slotsRef}
           className={`slots n${task.target.length} ${drag.near !== null || a.guide === 2 ? "is-near" : ""}`}
@@ -573,8 +577,8 @@ function Build({
               )}
             </span>
           ))}
+          {done && landed.length === task.target.length && <Burst />}
         </div>
-        {done && landed.length === task.target.length && <Burst />}
       </div>
       {flying.map((f) => (
         <FlyingPiece key={f.id} flight={f} onLanded={() => land(f.id)} />
@@ -624,6 +628,7 @@ function FlyingPiece({ flight, onLanded }: { flight: Flight; onLanded: () => voi
     <span
       className="flying-piece"
       style={{ left: from.left, top: from.top, width: from.width, height: from.height }}
+      aria-hidden="true"
       ref={(el) => {
         if (!el || el.dataset.go) return;
         el.dataset.go = "1";
@@ -634,12 +639,12 @@ function FlyingPiece({ flight, onLanded }: { flight: Flight; onLanded: () => voi
           [
             { transform: "translate(0, 0) scale(1) rotate(0deg)" },
             {
-              transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 40}px) scale(1.15) rotate(-8deg)`,
+              transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 20}px) scale(1.06) rotate(-4deg)`,
               offset: 0.45,
             },
             { transform: `translate(${dx}px, ${dy}px) scale(${s}) rotate(0deg)` },
           ],
-          { duration: 420, easing: "cubic-bezier(0.34, 1.3, 0.64, 1)", fill: "forwards" },
+          { duration: 360, easing: "cubic-bezier(0.34, 1.3, 0.64, 1)", fill: "forwards" },
         );
         anim.onfinish = () => done.current();
       }}
@@ -650,7 +655,7 @@ function FlyingPiece({ flight, onLanded }: { flight: Flight; onLanded: () => voi
 }
 
 /** Little stars bursting out of a right answer. */
-const BURST = Array.from({ length: 10 }, (_, i) => i);
+const BURST = Array.from({ length: 6 }, (_, i) => i);
 export function Burst() {
   return (
     <span className="burst" aria-hidden>
@@ -670,17 +675,22 @@ function HintExplanation({
   stage: number;
   pruned?: boolean;
 }) {
-  if (!stage) return null;
   return (
-    <p className="hint-explanation" data-hint-stage={stage} role="status">
-      <b>{stage === 1 ? "Попробуем так" : stage === 2 ? "Ещё немного помощи" : "Вот подсказка"}</b>{" "}
-      {stage === 1
-        ? methodHint(task)
-        : stage === 2
-          ? pruned
-            ? "Один неподходящий вариант убран. Сравни оставшиеся."
-            : "Сравни варианты ещё раз. Следующая подсказка покажет, что выбрать."
-          : "Лисёнок показывает, что выбрать. Попробуй сам!"}
-    </p>
+    <div className="hint-area">
+      {stage > 0 && (
+        <p className="hint-explanation" data-hint-stage={stage} role="status">
+          <b>
+            {stage === 1 ? "Попробуем так" : stage === 2 ? "Ещё немного помощи" : "Вот подсказка"}
+          </b>{" "}
+          {stage === 1
+            ? methodHint(task)
+            : stage === 2
+              ? pruned
+                ? "Один неподходящий вариант убран. Сравни оставшиеся."
+                : "Сравни варианты ещё раз. Следующая подсказка покажет, что выбрать."
+              : "Лисёнок показывает, что выбрать. Попробуй сам!"}
+        </p>
+      )}
+    </div>
   );
 }

@@ -87,7 +87,7 @@ export function TaskFriends({
           : guide?.stage === 1
             ? "think"
             : "wave";
-  const residentPose = mood === "happy" ? "-happy" : mood === "oops" ? "-sad" : "";
+  const residentPose = mood === "happy" ? "-happy" : "";
 
   return (
     <div className="task-friends">
@@ -112,7 +112,7 @@ export function TaskFriends({
         data-guide={guide?.stage ?? 0}
         onClick={() => tickle("fox")}
       >
-        <PoseSprite name={`fox-${foxPose}`} className={`friend-fox mood-${mood}`} />
+        <PoseSprite quiet name={`fox-${foxPose}`} className={`friend-fox mood-${mood}`} />
       </button>
     </div>
   );

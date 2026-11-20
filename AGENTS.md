@@ -25,3 +25,5 @@
 - A profile has one resumable lesson (`session-state.ts`, `sessions.ts`). Persist concrete tasks and draft before praise; statistics + next step + reward are one guarded update. Never count a resumed completed draft twice. Practice awards finds, never story stars.
 - Hint stages: method, remove a distractor, then answer. First two stages use `methodVoice`, which must not read the answer or claim that an unhighlighted tile is glowing.
 - Service worker updates wait for an explicit menu action; a failed shell install must be rejected and removed. Retain the previous offline cache and unrelated caches.
+- Task art and feedback styles live in `styles/comfort.css`. Keep the reserved `.hint-area` height stable across all help stages. Test dense 12-piece words at 320×568 before changing the compact layout.
+- Quiet task gestures use the existing wave WebP for one 6810 ms cycle, followed by 20 s stillness (`useQuietMotion`). Keep this duration aligned with `tools/pack-fox-motion.py`; motion must stop for hidden/inert content and reduced-motion preferences.
