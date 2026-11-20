@@ -1,5 +1,6 @@
 /** Versioned, bounded save format shared by local storage and portable backups. */
 import { NAMES } from "../content/names.ts";
+import { findStop } from "../content/worlds.ts";
 import { FOREST, SKILL_NAMES } from "../content/forest.ts";
 import type { Progress, SkillStat, WordStat } from "./progress.ts";
 
@@ -49,11 +50,12 @@ export function freshProgress(): Progress {
       autoHints: true,
       difficulty: "medium",
       limit: 0,
-      volume: { voice: 1, sounds: 0.8, music: 0.5, forest: 0.6 },
+      volume: { voice: 1, sounds: 0.8, music: 0.5 },
     },
     playLog: {},
     extra: {},
     forestCelebrated: false,
+    seaCelebrated: false,
     finds: {},
     opened: [],
     sky: {},
@@ -73,6 +75,7 @@ export function normalizeProgress(value: unknown): Progress {
   p.recent = Array.isArray(v.recent) ? v.recent.slice(-3).map(count) : [];
   p.adapt = number(v.adapt, 0, -0.45, 0.15);
   p.forestCelebrated = bool(v.forestCelebrated);
+  p.seaCelebrated = bool(v.seaCelebrated);
   p.finds = counts(v.finds);
   p.playLog = counts(v.playLog);
   p.extra = counts(v.extra);
@@ -91,14 +94,15 @@ export function normalizeProgress(value: unknown): Progress {
     ) as Progress["settings"]["volume"],
   };
   p.session = parseSession(v.session, p.settings.level);
-  if (
-    p.session?.mode === "story" &&
-    FOREST.slice(
-      0,
-      FOREST.findIndex((s) => s.id === p.session!.target),
-    ).some((s) => !p.done[s.id])
-  )
-    p.session = null;
+  if (p.session?.mode === "story") {
+    const found = findStop(p.session.target);
+    if (
+      !found ||
+      found.world.stops.slice(0, found.index).some((s) => !p.done[s.id]) ||
+      (found.world.id === "sea" && FOREST.some((s) => !p.done[s.id]))
+    )
+      p.session = null;
+  }
   if (p.session?.mode === "glade" && FOREST.some((s) => !p.done[s.id])) p.session = null;
   p.skills = Object.fromEntries(
     entries(v.skills)

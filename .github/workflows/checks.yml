@@ -38,7 +38,7 @@ jobs:
           trap 'kill "$PREVIEW_PID"' EXIT
           for i in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8081/ > /dev/null && break; sleep 1; done
           curl --fail --silent http://127.0.0.1:8081/ > /dev/null
-          BASE_URL=http://127.0.0.1:8081/ node --test --test-concurrency=1 tests/e2e/boost.test.mjs tests/e2e/parents.test.mjs tests/e2e/drag.test.mjs tests/e2e/difficulty.test.mjs tests/e2e/friends.test.mjs tests/e2e/visual.test.mjs tests/e2e/worlds-motion.test.mjs tests/e2e/learning.test.mjs tests/e2e/comfort.test.mjs tests/e2e/journey.test.mjs
+          BASE_URL=http://127.0.0.1:8081/ node --test --test-concurrency=1 tests/e2e/boost.test.mjs tests/e2e/parents.test.mjs tests/e2e/drag.test.mjs tests/e2e/difficulty.test.mjs tests/e2e/friends.test.mjs tests/e2e/visual.test.mjs tests/e2e/worlds-motion.test.mjs tests/e2e/learning.test.mjs tests/e2e/comfort.test.mjs tests/e2e/journey.test.mjs tests/e2e/music.test.mjs tests/e2e/sea.test.mjs
       - name: Offline smoke test
         run: |
           ./node_modules/.bin/vite preview --host 127.0.0.1 --port 8081 --strictPort > /tmp/lisenok-preview.log 2>&1 &

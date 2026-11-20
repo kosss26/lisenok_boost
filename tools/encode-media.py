@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 
 CACHE = "tmp/media-cache"
-OPUS_KBPS = {"voice": "28k", "sfx": "40k", "music": "64k"}
+OPUS_KBPS = {"voice": "32k", "sfx": "40k", "music": "64k"}
 
 os.makedirs(CACHE, exist_ok=True)
 INDEX = f"{CACHE}/.sources.json"
@@ -21,7 +21,8 @@ current = {}
 
 def stale(src, dst):
     with open(src, "rb") as f:
-        digest = hashlib.sha256(b"avif58-speed6-opus28-40-64-v1" + f.read()).hexdigest()
+        profile=b"opus32-voice-v2" if src.startswith("public/voice/") else b"avif58-speed6-opus28-40-64-v1"
+        digest = hashlib.sha256(profile + f.read()).hexdigest()
     current[dst] = digest
     return not os.path.exists(dst) or previous.get(dst) != digest
 

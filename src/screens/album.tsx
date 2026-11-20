@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FOREST } from "../content/forest";
+import { WORLD_LIST, ALL_STOPS } from "../content/worlds";
 import { FINDS } from "../content/glade";
 import { BackButton, Pic } from "../components/kit";
 import { IconLock } from "../components/icons";
@@ -7,7 +7,7 @@ import { Sky } from "../components/sky";
 import { giftKey } from "../content/voice";
 import { say, sfx } from "../game/audio";
 import { vibrate } from "../game/haptics";
-import { openGift, useProgress } from "../game/progress";
+import { openGift, useProgress, worldOpen } from "../game/progress";
 
 export function Album() {
   const p = useProgress();
@@ -25,9 +25,6 @@ export function Album() {
         <h1 className="album-title">Мои сокровища</h1>
         <span className="top-spacer" />
       </div>
-      <p className="album-sub">
-        Лес · {p.gifts.length} из {FOREST.length}
-      </p>
       {p.gifts.some((g) => !p.opened.includes(g)) && (
         <button
           type="button"
@@ -39,20 +36,29 @@ export function Album() {
           Новые подарки: {p.gifts.filter((g) => !p.opened.includes(g)).length} · Открыть ↓
         </button>
       )}
-      <div className="album-grid">
-        {FOREST.map((s) => (
-          <AlbumGift
-            key={s.id}
-            stopId={s.id}
-            gift={s.gift}
-            name={s.giftName}
-            resident={s.resident}
-            residentName={s.name}
-            have={p.gifts.includes(s.gift)}
-            wrapped={!p.opened.includes(s.gift)}
-          />
-        ))}
-      </div>
+      {WORLD_LIST.filter(
+        (w) => worldOpen(p, w.id) || w.stops.some((s) => p.gifts.includes(s.gift)),
+      ).map((w) => (
+        <section className={`album-world album-${w.id}`} key={w.id}>
+          <p className="album-sub">
+            {w.album} · {w.stops.filter((s) => p.gifts.includes(s.gift)).length} из {w.stops.length}
+          </p>
+          <div className="album-grid">
+            {w.stops.map((s) => (
+              <AlbumGift
+                key={s.id}
+                stopId={s.id}
+                gift={s.gift}
+                name={s.giftName}
+                resident={s.resident}
+                residentName={s.name}
+                have={p.gifts.includes(s.gift)}
+                wrapped={!p.opened.includes(s.gift)}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
       {Object.keys(p.sky).length > 0 && (
         <>
           <p className="album-sub">Моё небо · {Object.keys(p.sky).length} звёзд</p>
@@ -87,7 +93,7 @@ export function Album() {
         </>
       )}
       <div className="album-locked">
-        {["Море", "Горы", "Город", "Космос"].map((w) => (
+        {["Горы", "Город", "Космос"].map((w) => (
           <span key={w}>
             <IconLock /> {w}
           </span>
@@ -136,9 +142,9 @@ function AlbumGift({
     <button
       type="button"
       className={`album-slot ${have ? "is-have" : "is-empty"} ${box ? "is-wrapped" : ""} ${anim}`}
-      aria-label={have ? (box ? `Подарок от ${residentName}: открыть` : name) : "Пока не найдено"}
+      aria-label={have ? (box ? `${residentName}: открыть подарок` : name) : "Пока не найдено"}
       data-gift={gift}
-      data-open-style={FOREST.findIndex((s) => s.id === stopId) % 3}
+      data-open-style={ALL_STOPS.findIndex((s) => s.id === stopId) % 3}
       onClick={tap}
       onAnimationEnd={(e) => {
         if (anim === "is-spin" && e.animationName === "gift-spin") setAnim("");

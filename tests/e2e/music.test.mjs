@@ -1,5 +1,4 @@
-// Music: map / tasks / celebration tracks change with the screen, the forest layer plays under them,
-// and each has its own volume in the parents' corner.
+// The reference music changes with the screen; the removed forest/bird layer is never requested.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { hold, openPhone, saved } from "./helpers.mjs";
@@ -14,29 +13,31 @@ const until = (page, want) =>
       );
     });
 
-test("music follows the screen; forest sounds have their own volume", async (t) => {
+test("music follows the screen without forest ambience, even with legacy settings", async (t) => {
   const { page, errors } = await openPhone(t, {
     path: "/forest/hedgehog",
-    progress: { intro: true, settings: { level: 1, auto: false } },
+    progress: {
+      intro: true,
+      settings: { level: 1, auto: false, volume: { voice: 1, sounds: 0.8, music: 0.5, forest: 1 } },
+    },
   });
   await page.evaluate(() => (window.__musicErrors = []));
   await page.mouse.click(5, 300); // first tap unlocks sound
-  await until(page, "forest,map");
+  await until(page, "map");
   await page.click(".help-btn");
   await page.waitForSelector(".task");
-  await until(page, "forest,tasks");
+  await until(page, "tasks");
   await page.click(".back-btn");
-  await until(page, "forest,map");
+  await until(page, "map");
 
   await hold(page, ".parents-btn");
   await page.click(".parents-tab >> text=Звук");
-  await page.locator("#vol-forest").fill("0");
-  await until(page, "map");
+  assert.equal(await page.locator("#vol-forest").count(), 0);
+  assert.equal(Object.hasOwn((await saved(page)).settings.volume, "forest"), false);
   await page.locator("#vol-music").fill("0");
   await until(page, "");
-  await page.locator("#vol-forest").fill("0.4");
-  await until(page, "forest");
-  assert.equal((await saved(page)).settings.volume.forest, 0.4);
-  assert.equal(await tracks(page), "forest");
+  await page.locator("#vol-music").fill("0.4");
+  await until(page, "map");
+  assert.equal((await saved(page)).settings.volume.music, 0.4);
   assert.deepEqual(errors, []);
 });

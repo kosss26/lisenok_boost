@@ -1,134 +1,180 @@
-# Synthesizes every spoken line with Silero TTS v5 (ru), voice "xenia", into public/voice/<key>.mp3.
-# The list comes from src/content/voice.ts: run `npm run voice:list` first (writes assets/voice-lines.json).
-# Silero models are licensed CC BY-NC 4.0 — fine for this personal, non-commercial game.
-# Usage: python3 tools/make-voice.py <path to v5_ru.pt> [only-missing] [key ...]
-#        (model: https://models.silero.ai/models/tts/ru/v5_ru.pt; pip install torch numpy)
-import json, os, subprocess, sys, tempfile, wave
-import numpy as np
-import torch
+#!/usr/bin/env python3
+"""Voice lines with Yandex SpeechKit (API v3): assets/voice-lines.json -> public/voice/<key>.mp3
+(+ the Opus copy in tmp/media-cache/voice/, encoded from the same 48 kHz master).
 
-SPEAKER = "xenia"
-RATE = 48000
-torch.set_num_threads(4)
-model = torch.package.PackageImporter(sys.argv[1]).load_pickle("tts_models", "model")
-args = sys.argv[2:]
-only_missing = "only-missing" in args
-pick = {a for a in args if a != "only-missing"}
-lines = json.load(open("assets/voice-lines.json", encoding="utf-8"))
-# residents speak with their own Silero speaker and a pitch shift (key -> {speaker, pitch})
-voices = json.load(open("assets/voice-speakers.json", encoding="utf-8"))
-# hand-picked takes for clips the recogniser misheard (tools/voice-pick.py): key -> {"ssml"|"text", "speaker"?}
-overrides = json.load(open("assets/voice-overrides.json", encoding="utf-8"))
-out = "public/voice"
+  YANDEX_API_KEY=... python3 tools/make-voice.py all|missing|<key> [<key>...] [--dry] [--speed=0.9]
+                                                 [--text=<marked text for the one key>]
+                                                 [--reprocess]  (clean the saved masters again, free)
 
-# A lone vowel comes out of Silero as a ~60 ms blip, or glides into another vowel (ы -> и).
-# So: synthesize a few slow variants, measure formants (Praat), keep the longest steady stretch
-# that really is the wanted vowel, and stretch it a little. pip install praat-parselmouth
-VOWELS = {"letter-a": "а", "letter-o": "о", "letter-u": "у", "letter-y": "ы", "letter-eh": "э", "letter-i": "и"}
-TARGET = {"а": ((650, 1100), (1100, 1750)), "о": ((380, 650), (700, 1250)), "у": ((200, 430), (500, 1150)),
-          "ы": ((230, 470), (1450, 2100)), "э": ((420, 720), (1700, 2300)), "и": ((180, 400), (2200, 3000))}
+Casting (assets/voice-cast.json, written by `npm run voice:list`): narrator = marina (friendly),
+the fox = masha (good), forest residents = alena / lera / zahar with a pitch shift (src/content/forest.ts).
+Stress: every word of two or more syllables without «ё» gets its stress mark from assets/voice-stress.json
+(checked by hand, see assets/VOICE-STRESS.md); an unknown word stops the run. assets/voice-yandex.json
+replaces the text and/or speed of single lines (retakes chosen by tools/voice-retake.py). Masters (48 kHz WAV) and the request log stay in tmp/voice-master/.
+Clean-up: trim silence, 8 ms fade-in / 25 ms fade-out, -16 LUFS in the MP3 (-15.3 measured on the 48 kHz
+master), a 5 ms look-ahead limiter at -2 dBFS (at most 6 dB),
+60 ms of silence at the end; MP3 24 kHz 48 kbit/s, Opus 32 kbit/s."""
+import json, os, re, subprocess, sys, time
+import numpy as np, pyloudnorm
+from scipy.ndimage import minimum_filter1d, uniform_filter1d
 
-def steady_run(audio, v):
-    import math, parselmouth
-    s = parselmouth.Sound(audio.astype(np.float64), RATE)
-    p, f = s.to_pitch(0.01, 120, 500), s.to_formant_burg(0.01, 5, 5500)
-    (a1, b1), (a2, b2) = TARGET[v]
-    xs, best, start = p.xs(), (0, 0), None
-    ok = [not math.isnan(p.get_value_at_time(t)) and a1 <= f.get_value_at_time(1, t) <= b1
-          and a2 <= f.get_value_at_time(2, t) <= b2 for t in xs]
-    for i, good in enumerate(ok + [False]):
-        if good and start is None:
-            start = i
-        elif not good and start is not None:
-            if i - start > best[1] - best[0]:
-                best = (start, i)
-            start = None
-    if best[1] - best[0] < 3:
-        return None
-    return xs[best[0]], xs[best[1] - 1]
+sys.path.insert(0, os.path.dirname(__file__))
+import yandex_tts
 
-def voiced_seconds(audio):
-    import math, parselmouth
-    p = parselmouth.Sound(audio.astype(np.float64), RATE).to_pitch(0.01, 120, 500)
-    return sum(0.01 for t in p.xs() if not math.isnan(p.get_value_at_time(t)))
+LINES = json.load(open("assets/voice-lines.json", encoding="utf-8"))
+CAST = json.load(open("assets/voice-cast.json", encoding="utf-8"))
+LEX = json.load(open("assets/voice-stress.json", encoding="utf-8"))
+OVERRIDE = json.load(open("assets/voice-yandex.json", encoding="utf-8"))
+MASTER = "tmp/voice-master"
+LOG = f"{MASTER}/requests.jsonl"
+NARRATOR = {"voice": "marina", "role": "friendly", "pitch": 0}
+FOX = {"voice": "masha", "role": "good", "pitch": 0}
+VOWELS = set("аеёиоуыэюя")
+SINGLE = re.compile(r"^(letter|syl|n|w)-")
+# Yandex says a lone «ы» as «и» (formants of «и», also in «Буква Ы» and with phoneme markup), and the «ы»
+# cut out of marina's «мы» glides into «и» too: this clip stays the earlier Silero take (verified «ы»).
+KEEP = {"letter-y"}
 
-def clear_vowel(v, speaker, key):
-    variants = [f'<speak><prosody rate="slow">{v}-{v}</prosody></speak>',
-                f'<speak><prosody rate="x-slow">{v}-{v}</prosody></speak>',
-                f'<speak><prosody rate="slow">{v}</prosody></speak>', f"{v}-{v}."]
-    best = None
-    for ssml in variants:
-        kw = {"ssml_text": ssml} if ssml.startswith("<speak>") else {"text": ssml}
-        a = model.apply_tts(speaker=speaker, sample_rate=RATE, put_accent=True, put_yo=True, **kw).numpy()
-        run = steady_run(a, v)
-        if run and (best is None or run[1] - run[0] > best[1][1] - best[1][0]):
-            best = (a, run)
-    if best is None:
-        raise ValueError(f"no clear {v}")
-    a, (t0, t1) = best
-    print(f"{key}: steady {v} for {t1 - t0 + 0.01:.2f}s")
-    cut = a[int(max(0, t0 - 0.03) * RATE): int((t1 + 0.02) * RATE)].copy()
-    rise = int(0.015 * RATE)
-    cut[:rise] *= np.linspace(0, 1, rise)
-    fade = int(0.05 * RATE)
-    cut[-fade:] *= np.linspace(1, 0, fade)
-    # stretch the steady vowel to about 0.4 s (pitch kept): WSOLA via ffmpeg atempo later
-    VOWEL_TEMPO[key] = max(0.6, min(1.0, len(cut) / RATE / 0.42))
-    return torch.from_numpy(cut)
 
-VOWEL_TEMPO = {}
-os.makedirs(out, exist_ok=True)
-done = 0
-failed = []
-with tempfile.TemporaryDirectory() as tmp:
-    for key, text in lines.items():
-        target = f"{out}/{key}.mp3"
-        if pick and key not in pick:
+def mark_word(w: str, unknown: set) -> str:
+    low = w.lower()
+    if "+" in w or "ё" in low or sum(c in VOWELS for c in low) < 2:
+        return w
+    m = LEX.get(low)
+    if not m:
+        unknown.add(low)
+        return w
+    i = m.index("+")
+    return w[:i] + "+" + w[i:]
+
+
+def marked(key: str, unknown: set) -> str:
+    o = OVERRIDE.get(key)
+    text = (o.get("text") if isinstance(o, dict) else o) or LINES[key].replace("+", "")
+    text = re.sub(r"[+А-Яа-яЁё]+", lambda m: mark_word(m.group(0), unknown), text)
+    # a lone syllable or short word with «е» is otherwise often read with «ё» («че» -> «чё», «кеп» -> «кёп»,
+    # F2 of the vowel ~1100 Hz instead of ~2400): the stress mark pins it to «е»
+    if SINGLE.match(key) and "+" not in text and sum(c in VOWELS for c in text.lower()) == 1:
+        text = re.sub(r"([еЕ])", r"+\1", text, count=1)
+    return text
+
+
+def cast(key: str) -> dict:
+    c = CAST.get(key)
+    return FOX if c == "fox" else c or NARRATOR
+
+
+def speed_for(key: str, voice: str) -> float:
+    o = OVERRIDE.get(key)
+    if isinstance(o, dict) and o.get("speed"):
+        return o["speed"]
+    if SINGLE.match(key):
+        return 0.9
+    return 0.9 if voice == "zahar" else 0.95
+
+
+def clean(pcm: bytes) -> np.ndarray:
+    x = np.frombuffer(pcm, np.int16).astype(np.float64) / 32768
+    sr = yandex_tts.RATE
+    hop = sr // 200  # 5 ms frames
+    n = len(x) // hop
+    rms = np.sqrt((x[: n * hop].reshape(n, hop) ** 2).mean(1) + 1e-12)
+    db = 20 * np.log10(rms)
+    thr = max(db.max() - 42, -60)
+    on = np.where(db > thr)[0]
+    a = max(0, on[0] * hop - int(0.025 * sr))
+    b = min(len(x), (on[-1] + 1) * hop + int(0.06 * sr))
+    y = x[a:b].copy()
+    fi, fo = int(0.008 * sr), int(0.025 * sr)
+    y[:fi] *= 0.5 - 0.5 * np.cos(np.linspace(0, np.pi, fi))
+    y[-fo:] *= 0.5 + 0.5 * np.cos(np.linspace(0, np.pi, fo))
+    return np.concatenate([np.zeros(int(0.025 * sr)), level(y, sr), np.zeros(int(0.06 * sr))])
+
+
+def loudness(y: np.ndarray, sr: int) -> float:
+    # short clips are measured looped: the meter needs 400 ms blocks
+    probe = np.tile(y, int(np.ceil(1.5 * sr / len(y)))) if len(y) < 1.5 * sr else y
+    return pyloudnorm.Meter(sr).integrated_loudness(probe)
+
+
+def limit(y: np.ndarray, sr: int, ceiling: float) -> np.ndarray:
+    """look-ahead peak limiter (5 ms): smooth gain, never above the ceiling"""
+    n = int(0.005 * sr)
+    g = np.minimum(1.0, ceiling / np.maximum(np.abs(y), 1e-9))
+    g = minimum_filter1d(g, 2 * n + 1, mode="nearest")
+    g = uniform_filter1d(g, n, mode="nearest")
+    return y * g
+
+
+def level(y: np.ndarray, sr: int, target: float = -15.3, ceiling_db: float = -2.0) -> np.ndarray:
+    """gain to the target loudness; peaks above the ceiling go through the limiter (at most 6 dB)"""
+    ceiling = 10 ** (ceiling_db / 20)
+    out = y
+    for _ in range(3):
+        gain = 10 ** ((target - loudness(out, sr)) / 20)
+        out = out * gain
+        over = np.abs(out).max() / ceiling
+        if over > 2.0:  # more than 6 dB of limiting would squash the voice: lower the level instead
+            out = out / (over / 2.0)
+        out = limit(out, sr, ceiling)
+        if abs(loudness(out, sr) - target) < 0.3:
+            break
+    return out
+
+
+def encode(key: str, y: np.ndarray) -> None:
+    wav = f"{MASTER}/{key}.clean.f32"
+    y.astype(np.float32).tofile(wav)
+    src = ["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", str(yandex_tts.RATE), "-ac", "1", "-i", wav]
+    subprocess.run(src + ["-af", "aresample=24000:resampler=soxr:precision=28", "-c:a", "libmp3lame",
+                          "-b:a", "48k", f"public/voice/{key}.mp3"], check=True)
+    os.makedirs("tmp/media-cache/voice", exist_ok=True)
+    subprocess.run(src + ["-c:a", "libopus", "-b:a", "32k", "-application", "voip",
+                          f"tmp/media-cache/voice/{key}.ogg"], check=True)
+    os.remove(wav)
+
+
+def main() -> None:
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    opts = dict(a[2:].split("=", 1) if "=" in a else (a[2:], "1") for a in sys.argv[1:] if a.startswith("--"))
+    if not args:
+        sys.exit(__doc__)
+    keys = list(LINES) if args[0] in ("all", "missing") else args
+    if args[0] in ("all", "missing"):
+        keys = [k for k in keys if k not in KEEP]
+    if args[0] == "missing":
+        keys = [k for k in keys if not os.path.exists(f"public/voice/{k}.mp3")]
+    bad = [k for k in keys if k not in LINES]
+    if bad:
+        sys.exit(f"unknown keys: {bad}")
+    unknown: set = set()
+    texts = {k: opts.get("text") or marked(k, unknown) for k in keys}
+    if unknown:
+        sys.exit("words without a stress entry in assets/voice-stress.json: " + ", ".join(sorted(unknown)))
+    os.makedirs(MASTER, exist_ok=True)
+    spent = 0.0
+    for i, k in enumerate(keys):
+        c = cast(k)
+        speed = float(opts.get("speed") or speed_for(k, c["voice"]))
+        if "dry" in opts:
+            print(k, c["voice"], c["pitch"], speed, texts[k])
             continue
-        if only_missing and not pick and os.path.exists(target):
+        if "reprocess" in opts:  # clean up the saved master again, no request
+            encode(k, clean(open(f"{MASTER}/{k}.raw", "rb").read()))
             continue
-        speaker = voices.get(key, {}).get("speaker", SPEAKER)
-        try:
-            if key in overrides:
-                o = overrides[key]
-                speaker = o.get("speaker", speaker)
-                kw = {"ssml_text": o["ssml"]} if "ssml" in o else {"text": o["text"]}
-                audio = model.apply_tts(speaker=speaker, sample_rate=RATE, put_accent=True, put_yo=True, **kw)
-            elif key in VOWELS:
-                audio = clear_vowel(VOWELS[key], speaker, key)
-            elif key.startswith(("letter-", "syl-")):
-                # a lone letter or syllable: Silero tends to swallow the vowel, so try it plain and
-                # slow and keep the take with the longer voiced part
-                takes = [model.apply_tts(text=text + ".", speaker=speaker, sample_rate=RATE, put_accent=True, put_yo=True),
-                         model.apply_tts(ssml_text=f'<speak><prosody rate="slow">{text}</prosody></speak>',
-                                         speaker=speaker, sample_rate=RATE, put_accent=True, put_yo=True)]
-                audio = max(takes, key=lambda a: voiced_seconds(a.numpy()))
-            else:
-                audio = model.apply_tts(text=text if text[-1] in ".!?:" else text + ".", speaker=speaker,
-                                        sample_rate=RATE, put_accent=True, put_yo=True)
-        except ValueError:
-            print("cannot synthesize", key, repr(text))
-            failed.append(key)
-            continue
-        pcm = (audio.numpy() * 32767).clip(-32768, 32767).astype(np.int16)
-        wav = f"{tmp}/{key}.wav"
-        with wave.open(wav, "wb") as w:
-            w.setnchannels(1)
-            w.setsampwidth(2)
-            w.setframerate(RATE)
-            w.writeframes(pcm.tobytes())
-        pitch = voices.get(key, {}).get("pitch", 1)
-        shift = f"asetrate={RATE}*{pitch},aresample={RATE},atempo={1 / pitch:.4f}," if pitch != 1 else ""
-        if key in VOWEL_TEMPO:
-            shift += f"atempo={VOWEL_TEMPO[key]:.3f},"
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", wav,
-                        "-af", shift + "silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.06,areverse,silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.1,areverse,loudnorm=I=-16:TP=-1.5,apad=pad_dur=0.06",
-                        "-ar", "24000", "-ac", "1", "-b:a", "40k", "-map_metadata", "-1", target], check=True)
-        done += 1
-# drop clips for lines that no longer exist
-stale = [f for f in os.listdir(out) if f.endswith(".mp3") and f[:-4] not in lines]
-for f in stale:
-    os.remove(f"{out}/{f}")
-if failed:
-    print("FAILED:", failed)
-print(done, "made,", len(stale), "removed,", len(lines), "lines")
+        pcm = yandex_tts.synth(texts[k], c["voice"], c["role"], speed, c["pitch"])
+        cost = yandex_tts.units(texts[k]) * yandex_tts.PRICE_PER_UNIT
+        spent += cost
+        with open(LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"key": k, "text": texts[k], **c, "speed": speed, "rub": cost,
+                                "t": time.strftime("%Y-%m-%d %H:%M:%S")}, ensure_ascii=False) + "\n")
+        with open(f"{MASTER}/{k}.raw", "wb") as f:
+            f.write(pcm)
+        encode(k, clean(pcm))
+        if (i + 1) % 50 == 0:
+            print(f"{i + 1}/{len(keys)}  {spent:.1f} ₽", flush=True)
+    print(f"done: {len(keys)} lines, {spent:.2f} ₽", flush=True)
+
+
+if __name__ == "__main__":
+    main()

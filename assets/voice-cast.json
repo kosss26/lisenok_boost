@@ -1,0 +1,917 @@
+{
+ "hi": "fox",
+ "touch-fox": "fox",
+ "name-agata-hi": "fox",
+ "name-adam-hi": "fox",
+ "name-alina-hi": "fox",
+ "name-alisa-hi": "fox",
+ "name-alya-hi": "fox",
+ "name-ameliya-hi": "fox",
+ "name-andryusha-hi": "fox",
+ "name-antosha-hi": "fox",
+ "name-anya-hi": "fox",
+ "name-ariana-hi": "fox",
+ "name-arina-hi": "fox",
+ "name-arseniy-hi": "fox",
+ "name-artyom-hi": "fox",
+ "name-asya-hi": "fox",
+ "name-bogdan-hi": "fox",
+ "name-vadim-hi": "fox",
+ "name-valya-hi": "fox",
+ "name-vanya-hi": "fox",
+ "name-varya-hi": "fox",
+ "name-vasilisa-hi": "fox",
+ "name-vasya-hi": "fox",
+ "name-vera-hi": "fox",
+ "name-veronika-hi": "fox",
+ "name-vika-hi": "fox",
+ "name-vitya-hi": "fox",
+ "name-vova-hi": "fox",
+ "name-gleb-hi": "fox",
+ "name-gosha-hi": "fox",
+ "name-grisha-hi": "fox",
+ "name-david-hi": "fox",
+ "name-danya-hi": "fox",
+ "name-dasha-hi": "fox",
+ "name-demid-hi": "fox",
+ "name-denis-hi": "fox",
+ "name-diana-hi": "fox",
+ "name-dima-hi": "fox",
+ "name-dina-hi": "fox",
+ "name-eva-hi": "fox",
+ "name-egor-hi": "fox",
+ "name-elisey-hi": "fox",
+ "name-eseniya-hi": "fox",
+ "name-zhenya-hi": "fox",
+ "name-zahar-hi": "fox",
+ "name-zlata-hi": "fox",
+ "name-zoya-hi": "fox",
+ "name-ilyusha-hi": "fox",
+ "name-karina-hi": "fox",
+ "name-katya-hi": "fox",
+ "name-kira-hi": "fox",
+ "name-kirill-hi": "fox",
+ "name-kolya-hi": "fox",
+ "name-kostya-hi": "fox",
+ "name-ksyusha-hi": "fox",
+ "name-lev-hi": "fox",
+ "name-lena-hi": "fox",
+ "name-lera-hi": "fox",
+ "name-liza-hi": "fox",
+ "name-lilya-hi": "fox",
+ "name-luka-hi": "fox",
+ "name-lyuba-hi": "fox",
+ "name-lyova-hi": "fox",
+ "name-lyosha-hi": "fox",
+ "name-mayya-hi": "fox",
+ "name-maks-hi": "fox",
+ "name-maksim-hi": "fox",
+ "name-margarita-hi": "fox",
+ "name-marina-hi": "fox",
+ "name-mark-hi": "fox",
+ "name-matvey-hi": "fox",
+ "name-masha-hi": "fox",
+ "name-mila-hi": "fox",
+ "name-milana-hi": "fox",
+ "name-miron-hi": "fox",
+ "name-miroslava-hi": "fox",
+ "name-mitya-hi": "fox",
+ "name-misha-hi": "fox",
+ "name-miya-hi": "fox",
+ "name-nadya-hi": "fox",
+ "name-nastya-hi": "fox",
+ "name-nika-hi": "fox",
+ "name-nikita-hi": "fox",
+ "name-nikol-hi": "fox",
+ "name-nina-hi": "fox",
+ "name-oleg-hi": "fox",
+ "name-olya-hi": "fox",
+ "name-pasha-hi": "fox",
+ "name-petya-hi": "fox",
+ "name-platon-hi": "fox",
+ "name-polina-hi": "fox",
+ "name-rita-hi": "fox",
+ "name-roma-hi": "fox",
+ "name-savva-hi": "fox",
+ "name-sasha-hi": "fox",
+ "name-sveta-hi": "fox",
+ "name-senya-hi": "fox",
+ "name-seryozha-hi": "fox",
+ "name-sima-hi": "fox",
+ "name-slava-hi": "fox",
+ "name-sonya-hi": "fox",
+ "name-sofa-hi": "fox",
+ "name-stesha-hi": "fox",
+ "name-styopa-hi": "fox",
+ "name-taisiya-hi": "fox",
+ "name-tanya-hi": "fox",
+ "name-tasya-hi": "fox",
+ "name-tima-hi": "fox",
+ "name-timofey-hi": "fox",
+ "name-timosha-hi": "fox",
+ "name-tihon-hi": "fox",
+ "name-tonya-hi": "fox",
+ "name-tyoma-hi": "fox",
+ "name-ulyana-hi": "fox",
+ "name-ulya-hi": "fox",
+ "name-fedya-hi": "fox",
+ "name-filipp-hi": "fox",
+ "name-emiliya-hi": "fox",
+ "name-emil-hi": "fox",
+ "name-yulya-hi": "fox",
+ "name-yura-hi": "fox",
+ "name-yan-hi": "fox",
+ "name-yana-hi": "fox",
+ "name-yarik-hi": "fox",
+ "name-yaroslava-hi": "fox",
+ "touch-hedgehog": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "dlg-hedgehog-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "dlg-hedgehog-1": "fox",
+ "dlg-hedgehog-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "bye-hedgehog-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "bye-hedgehog-1": "fox",
+ "touch-squirrel": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "dlg-squirrel-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "dlg-squirrel-1": "fox",
+ "dlg-squirrel-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "bye-squirrel-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "bye-squirrel-1": "fox",
+ "touch-owl": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-owl-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-owl-1": "fox",
+ "dlg-owl-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-owl-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-owl-1": "fox",
+ "touch-mouse": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "dlg-mouse-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "dlg-mouse-1": "fox",
+ "dlg-mouse-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-mouse-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-mouse-1": "fox",
+ "touch-hare": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "dlg-hare-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "dlg-hare-1": "fox",
+ "dlg-hare-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "bye-hare-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "bye-hare-1": "fox",
+ "touch-beaver": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "dlg-beaver-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "dlg-beaver-1": "fox",
+ "dlg-beaver-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "bye-beaver-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "bye-beaver-1": "fox",
+ "dlg-hedgehog-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "dlg-hedgehog-2-1": "fox",
+ "dlg-hedgehog-2-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "bye-hedgehog-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 20
+ },
+ "bye-hedgehog-2-1": "fox",
+ "dlg-squirrel-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "dlg-squirrel-2-1": "fox",
+ "dlg-squirrel-2-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "bye-squirrel-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 0
+ },
+ "bye-squirrel-2-1": "fox",
+ "touch-frog": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "dlg-frog-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "dlg-frog-1": "fox",
+ "dlg-frog-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "bye-frog-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "bye-frog-1": "fox",
+ "dlg-owl-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-owl-2-1": "fox",
+ "dlg-owl-2-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-owl-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-owl-2-1": "fox",
+ "dlg-mouse-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "dlg-mouse-2-1": "fox",
+ "dlg-mouse-2-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-mouse-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-mouse-2-1": "fox",
+ "dlg-hare-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "dlg-hare-2-1": "fox",
+ "dlg-hare-2-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "bye-hare-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 50
+ },
+ "bye-hare-2-1": "fox",
+ "touch-bear": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-bear-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-bear-1": "fox",
+ "dlg-bear-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "bye-bear-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "bye-bear-1": "fox",
+ "dlg-bear-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-bear-young-1": "fox",
+ "dlg-bear-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-beaver-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "dlg-beaver-2-1": "fox",
+ "dlg-beaver-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "bye-beaver-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 25
+ },
+ "bye-beaver-2-1": "fox",
+ "touch-badger": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-badger-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-badger-1": "fox",
+ "dlg-badger-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-badger-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-badger-1": "fox",
+ "dlg-badger-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-badger-young-1": "fox",
+ "dlg-badger-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-badger-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-badger-2-1": "fox",
+ "dlg-badger-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-badger-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-badger-2-1": "fox",
+ "dlg-badger-2-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-badger-2-young-1": "fox",
+ "dlg-badger-2-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-bear-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-bear-2-1": "fox",
+ "dlg-bear-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "bye-bear-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "bye-bear-2-1": "fox",
+ "dlg-bear-2-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-bear-2-young-1": "fox",
+ "dlg-bear-2-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -25
+ },
+ "dlg-frog-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "dlg-frog-2-1": "fox",
+ "dlg-frog-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "bye-frog-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 45
+ },
+ "bye-frog-2-1": "fox",
+ "touch-res-crab": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "dlg-sea-crab-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "dlg-sea-crab-1": "fox",
+ "dlg-sea-crab-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "bye-sea-crab-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "bye-sea-crab-1": "fox",
+ "touch-res-turtle": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "dlg-sea-turtle-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "dlg-sea-turtle-1": "fox",
+ "dlg-sea-turtle-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "bye-sea-turtle-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "bye-sea-turtle-1": "fox",
+ "touch-res-gull": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "dlg-sea-gull-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "dlg-sea-gull-1": "fox",
+ "dlg-sea-gull-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "bye-sea-gull-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "bye-sea-gull-1": "fox",
+ "touch-res-seastar": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "dlg-sea-seastar-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "dlg-sea-seastar-1": "fox",
+ "dlg-sea-seastar-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "bye-sea-seastar-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "bye-sea-seastar-1": "fox",
+ "touch-res-fish": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "dlg-sea-fish-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "dlg-sea-fish-1": "fox",
+ "dlg-sea-fish-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-sea-fish-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-sea-fish-1": "fox",
+ "touch-res-octopus": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "dlg-sea-octopus-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "dlg-sea-octopus-1": "fox",
+ "dlg-sea-octopus-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "bye-sea-octopus-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "bye-sea-octopus-1": "fox",
+ "touch-res-dolphin": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "dlg-sea-dolphin-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "dlg-sea-dolphin-1": "fox",
+ "dlg-sea-dolphin-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "bye-sea-dolphin-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "bye-sea-dolphin-1": "fox",
+ "dlg-sea-dolphin-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "dlg-sea-dolphin-young-1": "fox",
+ "dlg-sea-dolphin-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "touch-res-jelly": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-sea-jelly-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-sea-jelly-1": "fox",
+ "dlg-sea-jelly-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-sea-jelly-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-sea-jelly-1": "fox",
+ "touch-res-seal": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-seal-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-seal-1": "fox",
+ "dlg-sea-seal-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-sea-seal-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-sea-seal-1": "fox",
+ "dlg-sea-seal-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-seal-young-1": "fox",
+ "dlg-sea-seal-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-crab-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "dlg-sea-crab-2-1": "fox",
+ "dlg-sea-crab-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "bye-sea-crab-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 35
+ },
+ "bye-sea-crab-2-1": "fox",
+ "dlg-sea-turtle-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "dlg-sea-turtle-2-1": "fox",
+ "dlg-sea-turtle-2-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "bye-sea-turtle-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": -20
+ },
+ "bye-sea-turtle-2-1": "fox",
+ "dlg-sea-seastar-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "dlg-sea-seastar-2-1": "fox",
+ "dlg-sea-seastar-2-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "bye-sea-seastar-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 40
+ },
+ "bye-sea-seastar-2-1": "fox",
+ "dlg-sea-octopus-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "dlg-sea-octopus-2-1": "fox",
+ "dlg-sea-octopus-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "bye-sea-octopus-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -10
+ },
+ "bye-sea-octopus-2-1": "fox",
+ "dlg-sea-dolphin-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "dlg-sea-dolphin-2-1": "fox",
+ "dlg-sea-dolphin-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "bye-sea-dolphin-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "bye-sea-dolphin-2-1": "fox",
+ "dlg-sea-dolphin-2-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "dlg-sea-dolphin-2-young-1": "fox",
+ "dlg-sea-dolphin-2-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": 55
+ },
+ "dlg-sea-gull-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "dlg-sea-gull-2-1": "fox",
+ "dlg-sea-gull-2-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "bye-sea-gull-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 20
+ },
+ "bye-sea-gull-2-1": "fox",
+ "dlg-sea-seal-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-seal-2-1": "fox",
+ "dlg-sea-seal-2-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-sea-seal-2-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "bye-sea-seal-2-1": "fox",
+ "dlg-sea-seal-2-young-0": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-seal-2-young-1": "fox",
+ "dlg-sea-seal-2-young-2": {
+  "voice": "zahar",
+  "role": "good",
+  "pitch": -30
+ },
+ "dlg-sea-fish-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "dlg-sea-fish-2-1": "fox",
+ "dlg-sea-fish-2-2": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-sea-fish-2-0": {
+  "voice": "lera",
+  "role": "friendly",
+  "pitch": 60
+ },
+ "bye-sea-fish-2-1": "fox",
+ "dlg-sea-jelly-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "dlg-sea-jelly-2-1": "fox",
+ "dlg-sea-jelly-2-2": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-sea-jelly-2-0": {
+  "voice": "alena",
+  "role": "good",
+  "pitch": 0
+ },
+ "bye-sea-jelly-2-1": "fox"
+}

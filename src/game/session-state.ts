@@ -1,5 +1,6 @@
 /** Bounded checkpoints. Invalid lesson data is dropped without discarding earned progress. */
-import { FOREST, SKILL_NAMES } from "../content/forest.ts";
+import { SKILL_NAMES } from "../content/forest.ts";
+import { ALL_STOPS, findStop } from "../content/worlds.ts";
 import { FINDS } from "../content/glade.ts";
 import { voiceLines } from "../content/voice.ts";
 import { SKILLS_BY_LEVEL } from "./tasks.ts";
@@ -140,7 +141,7 @@ export function parseSession(value: unknown, level: Level): LessonSession | null
     return null;
   if (
     s.mode === "story"
-      ? !FOREST.some((x) => x.id === s.target)
+      ? !ALL_STOPS.some((x) => x.id === s.target)
       : s.mode === "practice"
         ? !Object.hasOwn(SKILL_NAMES, String(s.target))
         : s.target !== "mixed"
@@ -234,7 +235,7 @@ export function parseSession(value: unknown, level: Level): LessonSession | null
 }
 export const sessionLocation = (s: LessonSession) =>
   s.mode === "story"
-    ? `/forest/${s.target}`
+    ? `/${findStop(s.target)?.world.id ?? "forest"}/${s.target}`
     : s.mode === "practice"
       ? `/practice/${s.target}`
       : "/glade";

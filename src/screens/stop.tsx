@@ -2,8 +2,9 @@ import { NotFound } from "./recovery";
 import { StoryReward } from "../components/story-reward";
 import { PoseSprite } from "../components/pose-sprite";
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { FOREST, timeOf, weatherOf, type Stop } from "../content/forest";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { type Stop } from "../content/forest";
+import { ALL_STOPS, findStop, type World } from "../content/worlds";
 import { StopWeather } from "../components/weather";
 import { introKey, youngId } from "../content/voice";
 import { useDialogue } from "../game/dialogue";
@@ -12,31 +13,42 @@ import { TaskView, type Guide, type Mood } from "../components/tasks";
 import { TaskFriends } from "../components/friends";
 import { DifficultyBadge } from "../components/difficulty";
 import { setScene, sfx, stopVoice } from "../game/audio";
-import { freeSkySpot, getProgress, placeStar, stopOpen, useProgress } from "../game/progress";
+import {
+  freeSkySpot,
+  getProgress,
+  placeStar,
+  stopOpen,
+  useProgress,
+  worldOpen,
+} from "../game/progress";
 import { completeSessionTask, clearSession } from "../game/sessions";
 import { LessonDraftContext } from "../game/lesson-draft";
 import { useLessonStart } from "../components/lesson-start";
-import { stopRoute } from "../router";
 
 export function StopScreen() {
-  const { stopId } = stopRoute.useParams();
+  const { stopId = "" } = useParams({ strict: false }) as { stopId?: string };
   const navigate = useNavigate();
-  const index = FOREST.findIndex((s) => s.id === stopId);
-  const stop = FOREST[index];
-  const allowed = stop && stopOpen(getProgress(), index);
-
+  const found = findStop(stopId);
+  const p = getProgress();
+  const allowed =
+    found && worldOpen(p, found.world.id) && stopOpen(p, found.index, found.world.stops);
   useEffect(() => {
-    if (stop && !allowed) void navigate({ to: "/forest", replace: true });
-  }, [allowed, navigate, stop]);
+    if (found && !allowed)
+      void navigate({
+        to: worldOpen(p, found.world.id) ? `/${found.world.id}` : "/map",
+        replace: true,
+      });
+  }, [allowed, navigate, found, p]);
   useEffect(() => () => stopVoice(), []);
 
-  if (!stop) return <NotFound />;
+  if (!found) return <NotFound />;
   if (!allowed) return null;
-  return <StopGame key={stop.id} stopIndex={index} />;
+  return <StopGame key={found.stop.id} world={found.world} stopIndex={found.index} />;
 }
 
-function StopGame({ stopIndex }: { stopIndex: number }) {
-  const stop = FOREST[stopIndex];
+function StopGame({ stopIndex, world }: { stopIndex: number; world: World }) {
+  const stop = world.stops[stopIndex];
+  const back = `/${world.id}`;
   const navigate = useNavigate();
   const p = useProgress();
   const session = p.session?.mode === "story" && p.session.target === stop.id ? p.session : null;
@@ -62,28 +74,35 @@ function StopGame({ stopIndex }: { stopIndex: number }) {
     void sfx("tap");
     stopVoice();
     if (!getProgress().sky[stop.id])
-      placeStar(stop.id, ...freeSkySpot(getProgress(), stopIndex + 1));
+      placeStar(
+        stop.id,
+        ...freeSkySpot(getProgress(), ALL_STOPS.findIndex((s) => s.id === stop.id) + 1),
+      );
     if (session) clearSession(session.id);
-    void navigate({ to: "/forest" });
+    void navigate({ to: back });
   };
 
   return (
     <Scene
-      bg="bg-clearing"
-      className={`stop-screen phase-${phase}`}
-      boxed={<StopWeather time={timeOf(stopIndex)} weather={weatherOf(stopIndex)} />}
+      bg={world.stopBg}
+      className={`stop-screen world-${world.id} phase-${phase}`}
+      boxed={<StopWeather time={world.time(stopIndex)} weather={world.weather(stopIndex)} />}
     >
       {dialog}
       <div className="top-bar">
-        <BackButton to="/forest" label="К тропинке" />
-        <div className="dots" aria-label={`Задание ${step + 1} из ${round.length}`}>
-          {round.map((_, i) => (
-            <span
-              key={i}
-              className={`dot ${i < step || phase === "reward" ? "is-done" : ""} ${i === step && phase === "task" ? "is-now" : ""}`}
-            />
-          ))}
-        </div>
+        <BackButton to={back} label={world.id === "sea" ? "К берегу" : "К тропинке"} />
+        {round.length > 0 ? (
+          <div className="dots" aria-label={`Задание ${step + 1} из ${round.length}`}>
+            {round.map((_, i) => (
+              <span
+                key={i}
+                className={`dot ${i < step || phase === "reward" ? "is-done" : ""} ${i === step && phase === "task" ? "is-now" : ""}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <span className="top-spacer" aria-hidden />
+        )}
         <DifficultyBadge />
       </div>
 

@@ -1,6 +1,7 @@
 /** Parents' corner (opened by holding the gear button): child, progress, time limit, sound. */
 import { useEffect, useState } from "react";
-import { FOREST, SKILL_NAMES, type Skill } from "../content/forest";
+import { SKILL_NAMES, type Skill } from "../content/forest";
+import { ALL_STOPS } from "../content/worlds";
 import { NAMES } from "../content/names";
 import { WORDS } from "../content/words";
 import { say } from "../game/audio";
@@ -215,7 +216,7 @@ export function Parents() {
             <div className="stats-row">
               <div className="stat">
                 <b>
-                  {starsIn(p)}/{FOREST.length}
+                  {starsIn(p, ALL_STOPS)}/{ALL_STOPS.length}
                 </b>
                 <span>звёзд в лесу</span>
               </div>
@@ -301,7 +302,6 @@ export function Parents() {
                 ["voice", "Голос"],
                 ["sounds", "Звуки"],
                 ["music", "Музыка"],
-                ["forest", "Звуки леса"],
               ] as const
             ).map(([key, label]) => (
               <label key={key} className="field range">
@@ -408,29 +408,11 @@ function Credits() {
           Автор музыки
         </a>
       </p>
-      <h3>Звуки леса</h3>
-      <p>
-        Thimras — Park ambiences; isaiah658 — Ambient Bird Sounds. Записи CC0, фрагменты сведены в
-        петлю.
-      </p>
-      <p>
-        <a href="https://opengameart.org/content/park-ambiences" target="_blank" rel="noreferrer">
-          Park ambiences
-        </a>{" "}
-        ·{" "}
-        <a
-          href="https://opengameart.org/content/ambient-bird-sounds"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Ambient Bird Sounds
-        </a>
-      </p>
       <h3>Голос и иллюстрации</h3>
       <p>
-        Голос: Silero TTS v5 (xenia, aidar, baya, kseniya, eugene), CC BY-NC 4.0. Эта версия озвучки
-        предназначена для некоммерческого использования. Иллюстрации сгенерированы для проекта.
-        Звуковые эффекты созданы программно.
+        Голос: Yandex SpeechKit — marina (рассказчик), masha (лисёнок), alena, lera и zahar
+        (жители). Отдельный звук «Ы» сохранён из Silero TTS, CC BY-NC 4.0. Иллюстрации сгенерированы
+        для проекта, звуковые эффекты созданы программно.
       </p>
       <p>Профили и успехи хранятся в браузере. Обязательной регистрации нет.</p>
     </section>

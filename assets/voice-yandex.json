@@ -1,0 +1,36 @@
+{
+ "w-yula": "юла",
+ "sky-place": {
+  "speed": 0.85
+ },
+ "name-ameliya-hi": {
+  "speed": 0.85
+ },
+ "syl-ri": {
+  "speed": 0.8
+ },
+ "syl-ryuk": {
+  "speed": 1.0
+ },
+ "syl-mel": {
+  "speed": 0.8
+ },
+ "w-mel": {
+  "speed": 0.8
+ },
+ "syl-vej": {
+  "speed": 0.8
+ },
+ "syl-kep": {
+  "speed": 0.8
+ },
+ "syl-yac": {
+  "speed": 0.8
+ },
+ "w-begemot": {
+  "speed": 1.0
+ },
+ "bye-sea-dolphin-1": {
+  "speed": 0.85
+ }
+}

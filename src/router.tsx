@@ -2,7 +2,7 @@ import { createRootRoute, createRoute, createRouter } from "@tanstack/react-rout
 import { Shell } from "./screens/shell";
 import { Title } from "./screens/title";
 import { WorldMap } from "./screens/world-map";
-import { Forest } from "./screens/forest";
+import { Forest,Sea } from "./screens/forest";
 import { StopScreen } from "./screens/stop";
 import { Album } from "./screens/album";
 import { Practice, PracticeLesson } from "./screens/practice";
@@ -22,6 +22,8 @@ export const stopRoute = createRoute({
   path: "/forest/$stopId",
   component: StopScreen,
 });
+const sea=createRoute({getParentRoute:()=>root,path:"/sea",component:Sea});
+const seaStop=createRoute({getParentRoute:()=>root,path:"/sea/$stopId",component:StopScreen});
 const glade = createRoute({ getParentRoute: () => root, path: "/glade", component: Glade });
 const practice = createRoute({
   getParentRoute: () => root,
@@ -41,6 +43,7 @@ export const router = createRouter({
     map,
     forest,
     stopRoute,
+    sea,seaStop,
     glade,
     album,
     practice,

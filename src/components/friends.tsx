@@ -22,6 +22,15 @@ const REACTION: Record<string, string> = {
   bear: "giggle",
   beaver: "giggle",
   badger: "giggle",
+  "res-crab": "giggle",
+  "res-turtle": "turn",
+  "res-gull": "jump",
+  "res-seastar": "turn",
+  "res-fish": "jump",
+  "res-octopus": "giggle",
+  "res-dolphin": "jump",
+  "res-jelly": "giggle",
+  "res-seal": "giggle",
 };
 
 export function TaskFriends({

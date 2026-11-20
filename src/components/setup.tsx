@@ -43,7 +43,7 @@ export function Setup({ onDone, onClose }: { onDone: () => void; onClose: () => 
                 level,
                 name: name || null,
                 difficulty: beginner ? "easy" : "medium",
-                volume: sound ? p.settings.volume : { voice: 0, sounds: 0, music: 0, forest: 0 },
+                volume: sound ? p.settings.volume : { voice: 0, sounds: 0, music: 0 },
               },
             }));
             onDone();

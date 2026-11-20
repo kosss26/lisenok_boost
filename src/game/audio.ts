@@ -1,6 +1,6 @@
 /**
- * Sound: voice lines, effects, music and forest sounds through one Web Audio graph with four
- * volume buses (voice / sounds / music / forest — set in the parents' corner). Voice lines play as sequences
+ * Sound: voice lines, effects and music through one Web Audio graph with three
+ * volume buses (voice / sounds / music — set in the parents' corner). Voice lines play as sequences
  * ("Найди букву" + "эм"); a new sequence cuts the previous one. Music ducks under the voice.
  */
 import { NO_OPUS, formats, musicUrl, sfxUrl, voiceUrl } from "./assets";
@@ -13,9 +13,8 @@ let master: GainNode | null = null;
 let voiceBus: GainNode | null = null;
 let soundBus: GainNode | null = null;
 let musicBus: GainNode | null = null;
-let forestBus: GainNode | null = null;
-export type Volumes = { voice: number; sounds: number; music: number; forest: number };
-const volumes: Volumes = { voice: 1, sounds: 0.8, music: 0.5, forest: 0.6 };
+export type Volumes = { voice: number; sounds: number; music: number };
+const volumes: Volumes = { voice: 1, sounds: 0.8, music: 0.5 };
 const raw = new Map<string, Promise<ArrayBuffer>>();
 const buffers = new Map<string, AudioBuffer>();
 const decoding = new Map<string, Promise<AudioBuffer | null>>();
@@ -23,7 +22,6 @@ let paused = false;
 let voiceNode: AudioBufferSourceNode | null = null;
 let sequence = 0;
 const MUSIC_BASE = 0.35;
-const FOREST_BASE = 0.5;
 
 function context() {
   if (!ctx) {
@@ -36,12 +34,9 @@ function context() {
     voiceBus.gain.value = volumes.voice;
     soundBus.gain.value = volumes.sounds;
     musicBus.gain.value = MUSIC_BASE * volumes.music;
-    forestBus = ctx.createGain();
-    forestBus.gain.value = FOREST_BASE * volumes.forest;
     voiceBus.connect(master);
     soundBus.connect(master);
     musicBus.connect(master);
-    forestBus.connect(master);
   }
   if (ctx.state === "suspended" && !paused) void ctx.resume();
   return ctx;
@@ -52,7 +47,6 @@ export function setVolumes(next: Partial<Volumes>) {
   if (voiceBus) voiceBus.gain.value = volumes.voice;
   if (soundBus) soundBus.gain.value = volumes.sounds;
   if (musicBus) musicBus.gain.value = MUSIC_BASE * volumes.music;
-  if (forestBus) forestBus.gain.value = FOREST_BASE * volumes.forest;
   if (musicWanted) startMusic();
 }
 
@@ -260,17 +254,15 @@ export function warmSfx() {
     void decode(sfxUrl(s));
 }
 
-// ---------- music and forest sounds ----------
-// Three tracks (map / tasks / celebration, see assets/SOUND-CREDITS.md) and a looped forest layer
-// (birds, wind, stream), each an <audio> element routed through its own gain into the music or
-// forest bus. Changing the scene cross-fades the tracks; the forest layer plays under all of them.
+// ---------- music ----------
+// The same three music tracks as kosss26/lisenok. No ambient forest/bird layer.
 type Track = { el: HTMLAudioElement; gain: GainNode | null; on: boolean; timer?: number };
 const tracks = new Map<string, Track>();
 let scene: Scene = "map";
 let musicWanted = false;
 const FADE = 0.6;
 
-function track(name: Scene | "forest"): Track {
+function track(name: Scene): Track {
   let t = tracks.get(name);
   if (!t) {
     const audio = context();
@@ -283,7 +275,7 @@ function track(name: Scene | "forest"): Track {
       gain = audio.createGain();
       gain.gain.value = 0;
       audio.createMediaElementSource(el).connect(gain);
-      gain.connect((name === "forest" ? forestBus : musicBus) ?? audio.destination);
+      gain.connect(musicBus ?? audio.destination);
     } catch {
       gain = null;
     }
@@ -299,7 +291,7 @@ function revive(name: string, old: Track, fallbackVolume: number) {
   old.el.removeAttribute("src");
   old.gain?.disconnect();
   tracks.delete(name);
-  const t = track(name as Scene | "forest");
+  const t = track(name as Scene);
   try {
     t.el.currentTime = at;
   } catch {
@@ -327,7 +319,7 @@ function fade(t: Track, on: boolean, fallbackVolume: number, retried = false) {
     t.timer = window.setTimeout(() => t.on || t.el.pause(), FADE * 1500);
   }
 }
-/** Start (or keep) the music for the current scene and the forest layer. */
+/** Start (or keep) the music for the current scene. */
 export function startMusic() {
   musicWanted = true;
   if (typeof window === "undefined" || paused) return;
@@ -336,9 +328,6 @@ export function startMusic() {
     const on = name === scene && volumes.music > 0;
     if (on || tracks.has(name)) fade(track(name), on, MUSIC_BASE * volumes.music);
   }
-  const forestOn = volumes.forest > 0;
-  if (forestOn || tracks.has("forest"))
-    fade(track("forest"), forestOn, FOREST_BASE * volumes.forest);
 }
 /** Which music fits the screen: the forest map, a task or a celebration. */
 export function setScene(next: Scene) {

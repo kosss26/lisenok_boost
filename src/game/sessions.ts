@@ -1,4 +1,5 @@
-import { FOREST, type Skill } from "../content/forest.ts";
+import { type Skill } from "../content/forest.ts";
+import { ALL_STOPS, findStop, storySkill } from "../content/worlds.ts";
 import { FINDS, nextFind } from "../content/glade.ts";
 import { makeRound, makePractice, SKILLS_BY_LEVEL } from "./tasks.ts";
 import { emptyDraft, type LessonSession, type TaskDraft } from "./session-state.ts";
@@ -12,34 +13,47 @@ import {
   weakSkills,
   nextAdapt,
   freeSkySpot,
+  worldOpen,
+  stopOpen,
 } from "./progress.ts";
 
 export function startSession(mode: LessonSession["mode"], target: string): LessonSession {
   let p = getProgress();
   if (
     mode === "story"
-      ? !FOREST.some((s) => s.id === target)
+      ? !ALL_STOPS.some((s) => s.id === target)
       : mode === "practice"
         ? !SKILLS_BY_LEVEL[p.settings.level].includes(target as Skill)
         : target !== "mixed"
   )
     throw new Error("Неизвестное занятие");
+  if (mode === "story") {
+    const found = findStop(target)!;
+    if (!worldOpen(p, found.world.id) || !stopOpen(p, found.index, found.world.stops))
+      throw new Error("Сначала закончи предыдущие остановки");
+  }
   if (p.session?.phase === "reward" && p.session.mode === "story" && !p.sky[p.session.target])
     p = {
       ...p,
       sky: {
         ...p.sky,
-        [p.session.target]: freeSkySpot(p, FOREST.findIndex((s) => s.id === p.session!.target) + 1),
+        [p.session.target]: freeSkySpot(
+          p,
+          ALL_STOPS.findIndex((s) => s.id === p.session!.target) + 1,
+        ),
       },
     };
   const base = p;
-  const stop = FOREST.findIndex((s) => s.id === target);
-  const tune = mode === "story" ? tuneFor(p, stop) : { level: p.settings.level, g: gladeGrade(p) };
+  const found = findStop(target);
+  const tune =
+    mode === "story"
+      ? tuneFor(p, found!.index, found!.world)
+      : { level: p.settings.level, g: gladeGrade(p) };
   const round =
     mode === "glade"
       ? makePractice(tune, weakSkills(p), weakWordIds(p))
       : makeRound(
-          mode === "story" ? FOREST[stop].skill : (target as Skill),
+          mode === "story" ? storySkill(found!.stop, p.settings.level) : (target as Skill),
           tune,
           Math.random,
           weakWordIds(p),
@@ -91,10 +105,10 @@ export function completeSessionTask(
           ...next,
           adapt: Math.max(-0.45, Math.round((next.adapt - Math.min(0.15, 0.05 * m)) * 100) / 100),
         };
-        const index = FOREST.findIndex((x) => x.id === s.target);
+        const found = findStop(s.target)!;
         const easier = makeRound(
-          FOREST[index].skill,
-          tuneFor(next, index),
+          storySkill(found.stop, next.settings.level),
+          tuneFor(next, found.index, found.world),
           Math.random,
           weakWordIds(next),
         );
@@ -106,7 +120,7 @@ export function completeSessionTask(
       };
     }
     if (s.mode === "story") {
-      const stop = FOREST.find((x) => x.id === s.target)!;
+      const stop = ALL_STOPS.find((x) => x.id === s.target)!;
       next = {
         ...next,
         done: { ...next.done, [s.target]: (next.done[s.target] ?? 0) + 1 },

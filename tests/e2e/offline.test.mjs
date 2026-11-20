@@ -3,9 +3,9 @@
 //   OFFLINE=1 BASE_URL=http://127.0.0.1:8081/ npm run test:e2e
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { openPhone, playStop } from "./helpers.mjs";
+import { openPhone, playStop, STOPS, KEY, BASE } from "./helpers.mjs";
 
-test("plays a stop with the network off", { skip: !process.env.OFFLINE }, async (t) => {
+test("plays both worlds offline", { skip: !process.env.OFFLINE }, async (t) => {
   const { page, context, errors } = await openPhone(t, {
     offline: true,
     progress: { intro: true },
@@ -81,5 +81,33 @@ test("plays a stop with the network off", { skip: !process.env.OFFLINE }, async 
     );
   assert.deepEqual(broken, [], "pictures load offline");
   await playStop(page, "hedgehog");
+  await page.addInitScript(
+    ([key, stops]) => {
+      if (sessionStorage.getItem("offline-sea-seeded")) return;
+      sessionStorage.setItem("offline-sea-seeded", "yes");
+      const v = JSON.parse(localStorage.getItem(key));
+      const done = Object.fromEntries(stops.map((id) => [id, 1]));
+      Object.assign(v, { done, session: null, forestCelebrated: true });
+      if (v.profiles?.[v.activeProfile])
+        Object.assign(v.profiles[v.activeProfile].progress, {
+          done,
+          session: null,
+          forestCelebrated: true,
+        });
+      localStorage.setItem(key, JSON.stringify(v));
+    },
+    [KEY, STOPS],
+  );
+  await page.goto(BASE + "sea");
+  await page.waitForSelector(".sea-screen");
+  await page.waitForFunction(() =>
+    [...document.images].every((i) => i.complete && i.naturalWidth > 0),
+  );
+  assert.equal(
+    await page.locator("img[data-media-error]").count(),
+    0,
+    "sea pictures load from the offline cache",
+  );
+  await playStop(page, "sea-crab");
   assert.deepEqual(errors, []);
 });

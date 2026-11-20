@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Stop } from "../content/forest";
-import { FOREST } from "../content/forest";
+import { WORLD, findStop } from "../content/worlds";
 import { giftKey, outroKey } from "../content/voice";
 import { say, sfx } from "../game/audio";
 import { useDialogue } from "../game/dialogue";
@@ -21,6 +21,7 @@ export function StoryReward({
   reward: NonNullable<LessonSession["reward"]>;
   onNext: () => void;
 }) {
+  const world = findStop(stop.id)?.world ?? WORLD.forest;
   const [stage, setStage] = useState<"place" | "thanks" | "gift">(() =>
     getProgress().sky[stop.id] || !reward.toPlace ? "gift" : "place",
   );
@@ -58,11 +59,12 @@ export function StoryReward({
     };
   }, [stage]);
   return (
-    <Modal className="reward story-reward" label="Награда" onClose={onNext}>
+    <Modal className={`reward story-reward world-${world.id}`} label="Награда" onClose={onNext}>
       <div className="reward-rays" aria-hidden />
       <header className="reward-heading">
         <p>
-          Звёзды леса · {starsIn(getProgress())}/{FOREST.length}
+          {world.id === "sea" ? "Звёзды моря" : "Звёзды леса"} ·{" "}
+          {starsIn(getProgress(), world.stops)}/{world.stops.length}
         </p>
         <h2>{reward.first ? "Звёздочка твоя!" : "Ты снова помог!"}</h2>
       </header>

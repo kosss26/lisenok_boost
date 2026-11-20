@@ -1,6 +1,6 @@
 /** The child's own night sky: every stop's star hangs where the child put it. */
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { FOREST } from "../content/forest";
+import { ALL_STOPS } from "../content/worlds";
 import { sfx } from "../game/audio";
 import { useDrag } from "../game/drag";
 import { vibrate } from "../game/haptics";
@@ -12,7 +12,7 @@ export function Sky({ className = "", highlight }: { className?: string; highlig
   return (
     <div className={`sky ${className}`} aria-label="Моё небо">
       <Pic name="moon" className="sky-moon" />
-      {FOREST.filter((s) => p.sky[s.id]).map((s) => {
+      {ALL_STOPS.filter((s) => p.sky[s.id]).map((s) => {
         const [x, y] = p.sky[s.id];
         return (
           <Pic

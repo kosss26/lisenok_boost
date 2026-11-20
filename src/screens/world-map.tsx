@@ -1,17 +1,20 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { FOREST, WORLDS } from "../content/forest";
+import { WORLDS } from "../content/forest";
+import { WORLD, WORLD_LIST, type WorldId } from "../content/worlds";
 import { NAMES } from "../content/names";
 import { Fox, ParentsButton, Pic, Scene, StarCount } from "../components/kit";
 import { say, sfx } from "../game/audio";
 import { IconStar } from "../components/icons";
 import { greeting } from "../game/greeting";
-import { getProgress, starsIn, useProgress } from "../game/progress";
+import { getProgress, starsIn, useProgress, worldOpen, worldDone } from "../game/progress";
 
 export function WorldMap() {
   const p = useProgress();
   const navigate = useNavigate();
-  const stars = starsIn(p);
+  const openWorlds = WORLD_LIST.filter((w) => worldOpen(p, w.id));
+  const stars = openWorlds.reduce((n, w) => n + starsIn(p, w.stops), 0),
+    total = openWorlds.reduce((n, w) => n + w.stops.length, 0);
   const noticeOrigin = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState("");
   const [shake, setShake] = useState<string | null>(null);
@@ -23,6 +26,9 @@ export function WorldMap() {
       : greeting.afterIntro
         ? ["map-pick"]
         : [name ? `name-${name.id}-hi` : "hi", "map-pick"];
+    if (worldDone(getProgress(), "forest") && !worldDone(getProgress(), "sea")) {
+      for (let i = 0; i < lines.length; i++) if (lines[i] === "map-pick") lines[i] = "map-pick-sea";
+    }
     greeting.done = true;
     greeting.afterIntro = false;
     const t = window.setTimeout(() => void say(lines), 350);
@@ -35,45 +41,53 @@ export function WorldMap() {
       className="map-screen"
       boxed={
         <>
-          {WORLDS.map((w) => (
-            <button
-              key={w.id}
-              type="button"
-              className={`world world-${w.id} ${w.open ? "is-open" : "is-locked"} ${shake === w.id ? "is-shaking" : ""}`}
-              aria-label={
-                w.open
-                  ? `${w.name}: ${stars} из ${FOREST.length} звёзд`
-                  : `${w.name}: скоро появится`
-              }
-              style={{ left: `${w.x}%`, top: `${w.y}%` }}
-              onClick={(e) => {
-                if (w.open) {
-                  void sfx("step");
-                  void navigate({ to: "/forest" });
-                  return;
+          {WORLDS.map((w) => {
+            const world = WORLD[w.id as WorldId];
+            const isOpen = Boolean(world && worldOpen(p, world.id));
+            return (
+              <button
+                key={w.id}
+                type="button"
+                className={`world world-${w.id} ${isOpen ? "is-open" : "is-locked"} ${shake === w.id ? "is-shaking" : ""}`}
+                aria-label={
+                  isOpen
+                    ? `${w.name}: ${world ? starsIn(p, world.stops) : 0} из ${world?.stops.length ?? 0} звёзд`
+                    : w.id === "sea"
+                      ? "Море: откроется после леса"
+                      : `${w.name}: скоро появится`
                 }
-                void sfx("tap");
-                noticeOrigin.current = e.currentTarget;
-                setShake(w.id);
-                setNotice(
-                  `${w.name} — новое приключение появится позже. Сейчас можно исследовать лес.`,
-                );
-                window.setTimeout(() => setShake(null), 600);
-                void say(["locked-soon"]);
-              }}
-            >
-              <span className="world-sign">
-                {w.name}
-                {w.open ? (
-                  <small>
-                    <IconStar /> {stars}/{FOREST.length}
-                  </small>
-                ) : (
-                  <small className="coming-soon">Скоро</small>
-                )}
-              </span>
-            </button>
-          ))}
+                style={{ left: `${w.x}%`, top: `${w.y}%` }}
+                onClick={(e) => {
+                  if (isOpen) {
+                    void sfx("step");
+                    void navigate({ to: world!.id === "sea" ? "/sea" : "/forest" });
+                    return;
+                  }
+                  void sfx("tap");
+                  noticeOrigin.current = e.currentTarget;
+                  setShake(w.id);
+                  setNotice(
+                    w.id === "sea"
+                      ? "Море откроется, когда все звёзды леса вернутся на небо."
+                      : `${w.name} — новое приключение появится позже. Сейчас можно исследовать лес и море.`,
+                  );
+                  window.setTimeout(() => setShake(null), 600);
+                  void say(["locked-soon"]);
+                }}
+              >
+                <span className="world-sign">
+                  {w.name}
+                  {isOpen ? (
+                    <small>
+                      <IconStar /> {world ? starsIn(p, world.stops) : 0}/{world?.stops.length}
+                    </small>
+                  ) : (
+                    <small className="coming-soon">{w.id === "sea" ? "После леса" : "Скоро"}</small>
+                  )}
+                </span>
+              </button>
+            );
+          })}
           <Fox pose="wave" className="map-fox" />
         </>
       }
@@ -104,7 +118,7 @@ export function WorldMap() {
         >
           <Pic name="chest" />
         </button>
-        <StarCount n={stars} total={FOREST.length} />
+        <StarCount n={stars} total={total} />
         <button
           type="button"
           className="round-btn practice-btn"

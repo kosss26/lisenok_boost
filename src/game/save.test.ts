@@ -30,7 +30,7 @@ test("malformed saves cannot inject settings, arrays or impossible counters", ()
   assert.equal(p.settings.level, 1);
   assert.equal(p.settings.difficulty, "medium");
   assert.equal(p.settings.auto, true);
-  assert.deepEqual(p.settings.volume, { voice: 0, sounds: 0.8, music: 1, forest: 0.6 });
+  assert.deepEqual(p.settings.volume, { voice: 0, sounds: 0.8, music: 1 });
   assert.deepEqual(p.done, {});
   assert.equal(p.words.cat.streak, 2);
   assert.equal(p.words.cat.hints, 2);

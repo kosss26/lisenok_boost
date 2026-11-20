@@ -15,16 +15,6 @@
 Licensed under Creative Commons: By Attribution 4.0 License
 http://creativecommons.org/licenses/by/4.0/
 
-## Звуки леса
-
-`public/music/forest.mp3` — 40-секундная бесшовная петля, сведённая `tools/make-music.py`
-из самых ровных отрывков трёх записей (CC0, указываем авторов из благодарности):
-
-- ручей и ветер — "Park ambiences" (park_ambience_river.wav, park_ambience_wind.wav), Thimras,
-  OpenGameArt, CC0 — https://opengameart.org/content/park-ambiences
-- птицы — "Ambient Bird Sounds" (birds-isaiah658.ogg), isaiah658, OpenGameArt, CC0 —
-  https://opengameart.org/content/ambient-bird-sounds
-
 ## Звуковые эффекты
 
 Все эффекты (`public/sfx/*.mp3`: тап, выбор, «правильно», «попробуй ещё», звёздочка, фанфары, шаг)
@@ -32,11 +22,19 @@ http://creativecommons.org/licenses/by/4.0/
 
 ## Голос
 
-Все фразы синтезированы Silero TTS v5 (ru) скриптом `tools/make-voice.py`: лисёнок и рассказчик — голос xenia, жители леса — голоса aidar, baya, kseniya и eugene со сдвигом высоты тона (`assets/voice-speakers.json`).
-Звуки-гласные (а, о, у, ы, э, и) вырезаются из нескольких медленных вариантов по формантам (Praat),
-чтобы звучал чистый ровный звук; ударения во фразах — словарь `src/content/stress.ts`.
-Модели Silero распространяются по лицензии CC BY-NC 4.0 — подходит для личного некоммерческого
-использования. Для коммерческой версии голос нужно перезаписать (живой диктор или коммерческий TTS).
+Все фразы синтезированы **Yandex SpeechKit** (Yandex Cloud, API v3) скриптом `tools/make-voice.py`
+на платном аккаунте владельца игры: рассказчик — голос **marina** (роль friendly), лисёнок — **masha** (good),
+жители леса — **alena** (good), **lera** (friendly) и **zahar** (good) с небольшим сдвигом высоты тона
+(`src/content/forest.ts`, `assets/voice-cast.json`). Яндекс не налагает ограничений на использование результатов
+SpeechKit (FAQ SpeechKit; Условия использования, п. 5.1) — их можно использовать и в коммерческом продукте.
+Ударения расставлены на каждом слове из двух и более слогов по проверенному вручную словарю
+`assets/voice-stress.json` (как он собран и что исправлено — `assets/VOICE-STRESS.md`).
+Обработка: обрезка тишины, короткие фейды, громкость −16 LUFS, MP3 24 кГц и Opus.
+
+Исключение — клип буквы «Ы» (`public/voice/letter-y.mp3`): синтезатор Яндекса произносит отдельную «ы»
+как «и», поэтому оставлена прежняя запись Silero TTS v5 (голос xenia; модели Silero — лицензия
+CC BY-NC 4.0, некоммерческое использование). Для коммерческой версии этот один клип нужно заменить
+(например, записать живым голосом).
 
 ## Картинки
 
